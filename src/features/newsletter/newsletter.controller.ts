@@ -1,34 +1,41 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Delete,
+  Body,
+  Param,
+  Get,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { NewsletterService } from './newsletter.service';
-import { CreateNewsletterDto } from './dto/create-newsletter.dto';
-import { UpdateNewsletterDto } from './dto/update-newsletter.dto';
-
+import { CreateNewsletterSubscriptionDto } from './dto/create-newsletter.dto';
+import { RolesGuard } from 'src/common/guards';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from '@prisma/client';
+@ApiTags('newsletter')
 @Controller('newsletter')
 export class NewsletterController {
   constructor(private readonly newsletterService: NewsletterService) {}
 
-  @Post()
-  create(@Body() createNewsletterDto: CreateNewsletterDto) {
-    return this.newsletterService.create(createNewsletterDto);
+  @Post('subscribe')
+  @ApiOperation({ summary: 'Subscribe to newsletter' })
+  subscribe(@Body() createSubscriptionDto: CreateNewsletterSubscriptionDto) {
+    return this.newsletterService.subscribe(createSubscriptionDto);
   }
 
-  @Get()
-  findAll() {
-    return this.newsletterService.findAll();
+  @Delete('unsubscribe/:email')
+  @ApiOperation({ summary: 'Unsubscribe from newsletter' })
+  unsubscribe(@Param('email') email: string) {
+    return this.newsletterService.unsubscribe(email);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.newsletterService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateNewsletterDto: UpdateNewsletterDto) {
-    return this.newsletterService.update(+id, updateNewsletterDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.newsletterService.remove(+id);
+  @Get('subscribers')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get all subscribers' })
+  getSubscribers() {
+    return this.newsletterService.getSubscribers();
   }
 }

@@ -1,26 +1,39 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAnalyticsDto } from './dto/create-analytics.dto';
-import { UpdateAnalyticsDto } from './dto/update-analytics.dto';
+import { CreateAnalyticsEventDto } from './dto/create-analytics.dto';
+import { DatabaseService } from 'src/core/database/database.service';
+import { PaginationParams } from 'src/shared/utils/pagination';
 
 @Injectable()
 export class AnalyticsService {
-  create(createAnalyticsDto: CreateAnalyticsDto) {
-    return 'This action adds a new analytics';
+  constructor(private prisma: DatabaseService) {}
+
+  async trackEvent(data: CreateAnalyticsEventDto) {
+    return this.prisma.analyticsEvent.create({
+      data,
+    });
   }
 
-  findAll() {
-    return `This action returns all analytics`;
+  async getArticleAnalytics(articleId: string, params: PaginationParams) {
+    console.log(params);
+    return this.prisma.analyticsEvent.findMany({
+      where: {
+        articleId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} analytics`;
-  }
-
-  update(id: number, updateAnalyticsDto: UpdateAnalyticsDto) {
-    return `This action updates a #${id} analytics`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} analytics`;
+  async getUserAnalytics(userId: string, params: PaginationParams) {
+    console.log(params);
+    return this.prisma.analyticsEvent.findMany({
+      where: {
+        userId,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
   }
 }

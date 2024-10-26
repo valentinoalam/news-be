@@ -1,26 +1,40 @@
 import { Injectable } from '@nestjs/common';
-import { CreateNewsletterDto } from './dto/create-newsletter.dto';
-import { UpdateNewsletterDto } from './dto/update-newsletter.dto';
+import { CreateNewsletterSubscriptionDto } from './dto/create-newsletter.dto';
+// import { UpdateNewsletterSubscriptionDto } from './dto/update-newsletter.dto';
+import { DatabaseService } from 'src/core/database/database.service';
 
 @Injectable()
 export class NewsletterService {
-  create(createNewsletterDto: CreateNewsletterDto) {
-    return 'This action adds a new newsletter';
+  constructor(private prisma: DatabaseService) {}
+
+  async subscribe(data: CreateNewsletterSubscriptionDto) {
+    return this.prisma.newsletterSubscription.create({
+      data: {
+        ...data,
+        // categories: {
+        //   connect: data.categoryIds?.map((id) => ({ id })),
+        // },
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all newsletter`;
+  async unsubscribe(email: string) {
+    return this.prisma.newsletterSubscription.update({
+      where: { email },
+      data: {
+        status: 'UNSUBSCRIBED',
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} newsletter`;
-  }
-
-  update(id: number, updateNewsletterDto: UpdateNewsletterDto) {
-    return `This action updates a #${id} newsletter`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} newsletter`;
+  async getSubscribers() {
+    return this.prisma.newsletterSubscription.findMany({
+      where: {
+        status: 'ACTIVE',
+      },
+      include: {
+        categories: true,
+      },
+    });
   }
 }

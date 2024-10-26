@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateAnalyticsDto } from './create-analytics.dto';
+import { CreateAnalyticsEventDto } from './create-analytics.dto';
 
-export class UpdateAnalyticsDto extends PartialType(CreateAnalyticsDto) {}
+export class UpdateAnalyticsDto extends PartialType(CreateAnalyticsEventDto) {}

@@ -1,26 +1,30 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMediaDto } from './dto/create-media.dto';
-import { UpdateMediaDto } from './dto/update-media.dto';
+import { CreateMediaItemDto } from './dto/create-media.dto';
+// import { UpdateMediaDto } from './dto/update-media.dto';
+import { DatabaseService } from 'src/core/database/database.service';
 
 @Injectable()
 export class MediaService {
-  create(createMediaDto: CreateMediaDto) {
-    return 'This action adds a new media';
+  constructor(private prisma: DatabaseService) {}
+
+  async create(data: CreateMediaItemDto) {
+    return this.prisma.mediaItem.create({
+      data,
+    });
   }
 
-  findAll() {
-    return `This action returns all media`;
+  async findAll() {
+    return this.prisma.mediaItem.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} media`;
-  }
-
-  update(id: number, updateMediaDto: UpdateMediaDto) {
-    return `This action updates a #${id} media`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} media`;
+  async attachToArticle(mediaId: string, articleId: string) {
+    return this.prisma.article.update({
+      where: { id: articleId },
+      data: {
+        mediaItems: {
+          connect: { id: mediaId },
+        },
+      },
+    });
   }
 }

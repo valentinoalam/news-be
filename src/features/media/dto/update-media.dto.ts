@@ -1,4 +1,4 @@
 import { PartialType } from '@nestjs/swagger';
-import { CreateMediaDto } from './create-media.dto';
+import { CreateMediaItemDto } from './create-media.dto';
 
-export class UpdateMediaDto extends PartialType(CreateMediaDto) {}
+export class UpdateMediaItemDto extends PartialType(CreateMediaItemDto) {}
