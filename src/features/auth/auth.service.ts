@@ -61,9 +61,9 @@ export class AuthService {
   }
 
   // Keep JWT validation for flexibility
-  async validateToken(token: string) {
+  async validateToken(bearerToken: string) {
     try {
-      const payload = await this.jwt.verifyAsync(token, {
+      const payload = await this.jwt.verifyAsync(bearerToken, {
         secret: this.config.get('app.nextAuthSecret'),
       });
 
@@ -71,11 +71,21 @@ export class AuthService {
         throw new UnauthorizedException('Invalid token structure');
       }
 
+      const user = await this.db.user.findFirst({
+        where: {
+          id: payload.sub,
+        },
+      });
+
+      if (!user) {
+        throw new UnauthorizedException('Invalid bearer token');
+      }
+
       return {
-        userId: payload.sub,
-        email: payload.email,
-        name: payload.name,
-        role: payload.role,
+        userId: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
       };
     } catch (error) {
       throw new UnauthorizedException('Invalid token');

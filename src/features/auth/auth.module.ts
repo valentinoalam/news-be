@@ -9,10 +9,9 @@ import { UserModule } from '../user/user.module';
 import { AuthService } from './auth.service';
 import { SessionSerializer } from './session.serializer';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from '@/common/guards/auth.guard';
-import { AtGuard } from '@/common/guards';
-import { JwtStrategy } from './strategies/jwt/jwt.strategy';
 // import { AtGuard } from '@/common/guards';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { JwtStrategy } from './strategies/jwt/jwt.strategy';
 import { AuthController } from './auth.controller';
 
 @Module({
@@ -36,17 +35,16 @@ import { AuthController } from './auth.controller';
     AuthService,
     UserService,
     JwtStrategy,
-    AuthGuard,
     SessionSerializer,
-    {
-      provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: AtGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: JwtAuthGuard,
+    // },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: AtGuard,
+    // },
   ],
-  exports: [AuthService, AuthGuard],
+  exports: [AuthService],
 })
 export class AuthModule {}

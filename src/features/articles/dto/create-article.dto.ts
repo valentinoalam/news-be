@@ -1,13 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { JsonValue } from '@prisma/client/runtime/library';
 import {
   IsArray,
   IsBoolean,
   IsDateString,
-  IsJSON,
   IsNotEmpty,
   IsOptional,
   IsString,
-  IsUUID,
 } from 'class-validator';
 
 export class CreateArticleDto {
@@ -25,11 +24,12 @@ export class CreateArticleDto {
   @IsString()
   slug: string;
   @ApiProperty({
-    type: 'string',
+    type: Object,
+    description: 'JSON content',
+    example: { key: 'value' }, // Provide an example if desired
   })
   @IsNotEmpty()
-  @IsJSON()
-  content: string;
+  content: JsonValue;
   @ApiProperty({
     type: 'string',
     required: false,
@@ -56,23 +56,23 @@ export class CreateArticleDto {
   })
   @IsOptional()
   @IsDateString()
-  publishedAt?: Date | null;
+  publishedAt?: string | null;
+  @ApiProperty({
+    type: 'string',
+    isArray: false,
+    required: false,
+    nullable: true,
+  })
+  @IsString()
+  @IsOptional()
+  categoryId: string;
   @ApiProperty({
     type: [String],
     isArray: true,
     required: false,
     nullable: true,
   })
+  @IsOptional()
   @IsArray()
-  @IsUUID('4', { each: true })
-  categoryIds: string[];
-  @ApiProperty({
-    type: [String],
-    isArray: true,
-    required: false,
-    nullable: true,
-  })
-  @IsArray()
-  @IsUUID('4', { each: true })
-  tagIds: string[];
+  tags: string[];
 }

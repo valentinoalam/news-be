@@ -3,7 +3,11 @@ import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { slugify } from '@/shared/utils/slugify.utils';
 import { DatabaseService } from 'src/core/database/database.service';
-import { PaginationParams } from '@/shared/utils/pagination.utils';
+import {
+  getPaginatedData,
+  getPaginationParams,
+  PaginationParams,
+} from '@/shared/utils/pagination.utils';
 
 @Injectable()
 export class ArticleService {
@@ -11,74 +15,115 @@ export class ArticleService {
     console.log(id);
     throw new Error('Method not implemented.');
   }
-  constructor(private prisma: DatabaseService) {}
+  constructor(private db: DatabaseService) {}
 
   async create(data: CreateArticleDto, authorId: string) {
-    return this.prisma.article.create({
+    const { categoryId, ...rest } = data;
+    return this.db.article.create({
       data: {
-        ...data,
-        slug: slugify(data.title),
+        ...rest,
+        slug: slugify(rest.title),
         author: {
           connect: { id: authorId },
         },
-        categories: {
-          connect: data.categoryIds.map((id) => ({ id })),
+        category: {
+          connect: { id: categoryId },
         },
         tags: {
-          connect: data.tagIds.map((id) => ({ id })),
+          connect: rest.tags.map((id) => ({ id })),
         },
       },
       include: {
         author: true,
-        categories: true,
+        category: true,
         tags: true,
       },
     });
   }
-
-  async createRevision(
+  async updateArticle(
     articleId: string,
-    data: UpdateArticleDto,
+    updateData: UpdateArticleDto,
     userId: string,
   ) {
-    const article = await this.prisma.article.findUnique({
+    // Ambil artikel asli sebelum diperbarui
+    const originalArticle = await this.db.article.findUnique({
+      where: { id: articleId },
+    });
+
+    if (!originalArticle) throw new Error('Article not found');
+
+    // Simpan revisi dari artikel asli
+    await this.createRevision(articleId, originalArticle);
+
+    // Update artikel dengan data baru
+    return await this.update(articleId, updateData, userId);
+  }
+
+  async update(id: string, data: UpdateArticleDto, userId: any) {
+    return this.db.article.update({
+      where: { id },
+      data: {
+        ...data,
+        updatedById: userId,
+        slug: data.title ? slugify(data.title) : undefined,
+        tags: data.tags
+          ? {
+              set: data.tags.map((id) => ({ id })),
+            }
+          : undefined,
+      },
+    });
+  }
+
+  async createRevision(articleId: string, data: any) {
+    const article = await this.db.article.findUnique({
       where: { id: articleId },
       include: { revisions: true },
     });
 
     const newVersion = (article.revisions.length || 0) + 1;
 
-    return this.prisma.articleRevision.create({
+    return this.db.articleRevision.create({
       data: {
         articleId,
         version: newVersion,
         title: data.title,
         content: data.content,
         excerpt: data.excerpt,
-        createdBy: userId,
+        createdBy: data.updatedById ? data.updatedById : data.authorId,
         changeLog: data.changeLog,
       },
     });
   }
 
   async findAll(params: PaginationParams) {
-    console.log(params);
-    return this.prisma.article.findMany({
+    const { skip, limit, orderBy } = getPaginationParams(params);
+    const query = {
       include: {
         author: true,
-        categories: true,
+        category: true,
         tags: true,
         metadata: true,
       },
-    });
+      orderBy,
+    };
+    const paginatedArticles = await getPaginatedData(
+      this.db,
+      'article',
+      query,
+      params.page,
+      limit,
+      skip,
+    );
+    return paginatedArticles;
   }
 
   async findOne(id: string) {
-    return this.prisma.article.findUnique({
+    return this.db.article.findUnique({
       where: { id },
       include: {
         author: true,
-        categories: true,
+        category: true,
         tags: true,
         metadata: true,
         revisions: true,
@@ -86,24 +131,38 @@ export class ArticleService {
     });
   }
 
-  async update(id: string, data: UpdateArticleDto, userId: any) {
-    return this.prisma.article.update({
-      where: { id },
-      data: {
-        ...data,
-        updatedById: userId,
-        slug: data.title ? slugify(data.title) : undefined,
-        categories: data.categoryIds
-          ? {
-              set: data.categoryIds.map((id) => ({ id })),
-            }
-          : undefined,
-        tags: data.tagIds
-          ? {
-              set: data.tagIds.map((id) => ({ id })),
-            }
-          : undefined,
+  async getTopArticles() {
+    // Query untuk memilih satu artikel dengan view terbanyak sebagai headline
+    const headlineArticle = await this.db.article.findFirst({
+      orderBy: {
+        viewCount: 'desc',
       },
+      take: 1,
     });
+
+    // Query untuk memilih dua artikel terbaru dengan view terbanyak dari tiap kategori
+    const categories = await this.db.category.findMany(); // Mendapatkan semua kategori
+
+    const articlesByCategory = await Promise.all(
+      categories.map(async (category) => {
+        const articles = await this.db.article.findMany({
+          where: {
+            categoryId: category.id,
+          },
+          orderBy: [{ viewCount: 'desc' }, { createdAt: 'desc' }],
+          take: 2,
+        });
+
+        return {
+          category: category.name,
+          articles,
+        };
+      }),
+    );
+
+    return {
+      headline: headlineArticle,
+      topArticlesByCategory: articlesByCategory,
+    };
   }
 }

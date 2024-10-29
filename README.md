@@ -9,8 +9,8 @@
   - [x] Buat endpoint untuk menghapus artikel.
 - [x] **Kategori Artikel**
   - [x] CRUD kategori untuk artikel.
-  - [ ] Filter artikel berdasarkan kategori.
-- [ ] **Status Artikel**
+  - [x] Filter artikel berdasarkan kategori.
+- [x] **Status Artikel**
   - [ ] Buat logika status artikel (*draft*, *published*, *archived*).
 - [ ] **Tanggal Publikasi Terjadwal**
   - [ ] Implementasi fitur penjadwalan publikasi otomatis untuk artikel.
@@ -27,10 +27,10 @@
 
 ## 3. Pengaturan SEO dan Metadata
 
-- [ ] **SEO Basic**
-  - [ ] Tambahkan kolom untuk metadata (judul, deskripsi, kata kunci).
-- [ ] **URL Ramah SEO**
-  - [ ] Konfigurasi untuk membuat URL otomatis berdasarkan judul artikel.
+- [x] **SEO Basic**
+  - [x] Tambahkan kolom untuk metadata (judul, deskripsi, kata kunci).
+- [x] **URL Ramah SEO(slug)**
+  - [x] Konfigurasi untuk membuat URL otomatis berdasarkan judul artikel.
 
 ## 4. Pengaturan Pengguna dan Hak Akses
 
@@ -41,19 +41,19 @@
 
 ## 5. Frontend Pembaca Berita
 
-- [ ] **Tampilan Artikel**
-  - [ ] Tampilan halaman artikel yang responsif dan menarik.
-- [ ] **Homepage dengan Artikel Terkini**
-  - [ ] Daftar artikel terkini di halaman utama, berdasarkan tanggal dan popularitas.
-- [ ] **Navigasi Berdasarkan Kategori**
-  - [ ] Menu navigasi berdasarkan kategori berita.
+- [x] **Tampilan Artikel**
+  - [x] Tampilan halaman artikel yang responsif dan menarik.
+- [x] **Homepage dengan Artikel Terkini**
+  - [x] Daftar artikel terkini di halaman utama, berdasarkan tanggal dan popularitas.
+- [x] **Navigasi Berdasarkan Kategori**
+  - [x] Menu navigasi berdasarkan kategori berita.
 
 ## 6. Pencarian dan Filter Artikel
 
-- [ ] **Fitur Pencarian**
-  - [ ] Fungsi pencarian artikel berdasarkan judul, kata kunci, atau penulis.
-- [ ] **Filter Berdasarkan Kategori dan Tanggal**
-  - [ ] Filter artikel berdasarkan kategori atau tanggal publikasi.
+- [x] **Fitur Pencarian**
+  - [x] Fungsi pencarian artikel berdasarkan judul, kata kunci, atau penulis.
+- [x] **Filter Berdasarkan Kategori dan Tanggal**
+  - [x] Filter artikel berdasarkan kategori atau tanggal publikasi.
 
 ## 7. Autentikasi User
 

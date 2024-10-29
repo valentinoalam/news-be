@@ -16,7 +16,7 @@ export class CreateUserDto {
   })
   @IsOptional()
   @IsEmail()
-  @IsUnique('user', 'email', { message: 'Email already exists' })
+  // @IsUnique('user', 'email', { message: 'Email already exists' })
   email: string | null;
   @ApiProperty({
     type: 'string',

@@ -5,7 +5,7 @@ import { Role } from '@prisma/client';
 import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class RoleGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
   matchRoles(roles: string[], userRoles: string[]) {
     return roles.some((role) => userRoles.includes(role));

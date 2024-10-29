@@ -16,14 +16,14 @@ export default class SwaggerDocumentation {
       .setTitle(configItem.get('app.name'))
       .setDescription(configItem.get('app.swaggerDescription'))
       .setVersion('1.0')
-      .addBearerAuth(
-        {
-          type: 'http',
-          bearerFormat: 'JWT',
-          in: 'header',
-        },
-        'access-token',
-      )
+      // .addBearerAuth(
+      //   {
+      //     type: 'http',
+      //     bearerFormat: 'JWT',
+      //     in: 'header',
+      //   },
+      //   'access-token',
+      // )
       // .addSecurityRequirements('access-token')
       .build();
 

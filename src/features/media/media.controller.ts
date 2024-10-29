@@ -10,7 +10,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
 import { MediaService } from './media.service';
-import { RolesGuard } from 'src/common/guards';
+import { RoleGuard } from 'src/common/guards';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
@@ -19,7 +19,7 @@ import { ConfigService } from '@nestjs/config';
 
 @ApiTags('media')
 @Controller('media')
-@UseGuards(RolesGuard)
+@UseGuards(RoleGuard)
 @ApiBearerAuth()
 @Controller('media')
 export class MediaController {

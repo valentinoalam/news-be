@@ -19,21 +19,21 @@ import {
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { RolesGuard } from './../../common/guards/roles.guard';
+import { RoleGuard } from '../../common/guards/role.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { PaginationParams } from '@/shared/utils/pagination.utils';
 
 @ApiTags('users')
 @Controller('users')
-@UseGuards(RolesGuard)
-@ApiBearerAuth()
+// @UseGuards(RoleGuard)
+// @ApiBearerAuth()
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  @Roles(Role.ADMIN)
+  // @Roles(Role.ADMIN)
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   create(@Body() createUserDto: CreateUserDto) {

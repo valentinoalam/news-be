@@ -10,7 +10,7 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { NewsletterService } from './newsletter.service';
 import { CreateNewsletterSubscriptionDto } from './dto/create-newsletter.dto';
-import { RolesGuard } from 'src/common/guards';
+import { RoleGuard } from 'src/common/guards';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 @ApiTags('newsletter')
@@ -31,7 +31,7 @@ export class NewsletterController {
   }
 
   @Get('subscribers')
-  @UseGuards(RolesGuard)
+  @UseGuards(RoleGuard)
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all subscribers' })

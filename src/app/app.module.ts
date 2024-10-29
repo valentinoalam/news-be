@@ -26,7 +26,6 @@ import { ConfigValidator } from '@/core/config/validator/config.validator';
 import { FeaturesModule } from '@/features/features.module';
 import { CacheModule } from '@nestjs/cache-manager';
 // import { APP_INTERCEPTOR } from '@nestjs/core';
-import { CaslModule } from './casl/casl.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -65,7 +64,6 @@ import { CaslModule } from './casl/casl.module';
       ],
     }),
     FeaturesModule,
-    CaslModule,
     CacheModule.register({
       isGlobal: true,
       store: 'memory',

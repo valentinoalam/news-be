@@ -8,7 +8,8 @@ import { PaginationParams } from '@/shared/utils/pagination.utils';
 @Injectable()
 export class UserService {
   constructor(private db: DatabaseService) {}
-  async create(data: CreateUserDto) {
+  async create(dto: CreateUserDto) {
+    const data = { ...dto, provider: 'credential' };
     const hashedPassword = await hash(data.password, { timeCost: 10 });
     return this.db.user.create({
       data: {

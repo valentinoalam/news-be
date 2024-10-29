@@ -15,14 +15,14 @@ import {
 } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
 import { CreateAnalyticsEventDto } from './dto/create-analytics.dto';
-import { RolesGuard } from 'src/common/guards';
+import { RoleGuard } from 'src/common/guards';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { PaginationParams } from '@/shared/utils/pagination.utils';
 
 @ApiTags('analytics')
 @Controller('analytics')
-@UseGuards(RolesGuard)
+@UseGuards(RoleGuard)
 @ApiBearerAuth()
 @Controller('analytics')
 export class AnalyticsController {
