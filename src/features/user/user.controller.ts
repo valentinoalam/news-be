@@ -22,7 +22,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { RolesGuard } from './../../common/guards/roles.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { PaginationParams } from 'src/shared/utils/pagination';
+import { PaginationParams } from '@/shared/utils/pagination.utils';
 
 @ApiTags('users')
 @Controller('users')

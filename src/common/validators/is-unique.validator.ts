@@ -10,15 +10,18 @@ import { DatabaseService } from 'src/core/database/database.service';
 @Injectable()
 @ValidatorConstraint({ async: true })
 export class IsUniqueConstraint implements ValidatorConstraintInterface {
-  constructor(private prisma: DatabaseService) {}
+  constructor(private db: DatabaseService) {}
 
   async validate(value: any, args: any) {
     const [model, field] = args.constraints;
-    const count = await this.prisma[model].count({
+    // Check if a record with the given value exists
+    const count = await this.db[model as string].count({
       where: {
         [field]: value,
       },
     });
+
+    // Return true if no record is found, indicating uniqueness
     return count === 0;
   }
 }

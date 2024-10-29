@@ -1,39 +1,59 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAnalyticsEventDto } from './dto/create-analytics.dto';
 import { DatabaseService } from 'src/core/database/database.service';
-import { PaginationParams } from 'src/shared/utils/pagination';
+import {
+  getPaginatedData,
+  getPaginationParams,
+  PaginationParams,
+} from '@/shared/utils/pagination.utils';
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class AnalyticsService {
-  constructor(private prisma: DatabaseService) {}
+  constructor(private db: DatabaseService) {}
+  private prisma = new PrismaClient();
 
   async trackEvent(data: CreateAnalyticsEventDto) {
-    return this.prisma.analyticsEvent.create({
+    return this.db.analyticsEvent.create({
       data,
     });
   }
 
   async getArticleAnalytics(articleId: string, params: PaginationParams) {
-    console.log(params);
-    return this.prisma.analyticsEvent.findMany({
+    const { skip, limit, orderBy = 'createdAt' } = getPaginationParams(params);
+    const query = {
       where: {
         articleId,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+      orderBy,
+    };
+    const paginatedArticles = await getPaginatedData(
+      this.prisma,
+      'analyticsEvent',
+      query,
+      params.page,
+      limit,
+      skip,
+    );
+    return paginatedArticles;
   }
 
   async getUserAnalytics(userId: string, params: PaginationParams) {
-    console.log(params);
-    return this.prisma.analyticsEvent.findMany({
+    const { skip, limit, orderBy = 'createdAt' } = getPaginationParams(params);
+    const query = {
       where: {
         userId,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
+      orderBy,
+    };
+    const paginatedArticles = await getPaginatedData(
+      this.prisma,
+      'analyticsEvent',
+      query,
+      params.page,
+      limit,
+      skip,
+    );
+    return paginatedArticles;
   }
 }

@@ -3,6 +3,7 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
+  IsJSON,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -27,7 +28,7 @@ export class CreateArticleDto {
     type: 'string',
   })
   @IsNotEmpty()
-  @IsString()
+  @IsJSON()
   content: string;
   @ApiProperty({
     type: 'string',

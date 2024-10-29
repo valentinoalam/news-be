@@ -3,32 +3,7 @@
 
 // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-generator nestjsDto {
-  provider                        = "prisma-generator-nestjs-dto"
-  output                          = "./generated/dto"
-  outputToNestJsResourceStructure = "true"
-  flatResourceStructure           = "false"
-  exportRelationModifierClasses   = "true"
-  reExport                        = "true"
-  generateFileTypes               = "all"
-  createDtoPrefix                 = "Create"
-  updateDtoPrefix                 = "Update"
-  dtoSuffix                       = "Dto"
-  entityPrefix                    = ""
-  entitySuffix                    = ""
-  classValidation                 = "true"
-  fileNamingStyle                 = "camel"
-  noDependencies                  = "false"
-  outputType                      = "class"
-  definiteAssignmentAssertion     = "false"
-  requiredResponseApiProperty     = "true"
-  prettier                        = "true"
-  outputApiPropertyType           = "true"
-}
-// generator custom_generator {
-//     provider = "prisma-generator-fake-data"
-//     output   = "./types/fake-data.ts"
-// }
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -38,11 +13,21 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model User {
   id              String           @id @default(cuid())
+  googleId        String?          @unique
+  githubId        String?          @unique
   email           String           @unique
   name            String
-  password        String
+  password        String?
   role            Role            @default(EDITOR)
   articles        Article[]
   comments        Comment[]
@@ -53,6 +38,7 @@ model User {
   analyticsEvents AnalyticsEvent[]
 
   @@map("users")
+  Session Session[]
 }
 
 model Profile {
@@ -72,7 +58,7 @@ model Article {
   id            String           @id @default(cuid())
   title         String
   slug          String           @unique
-  content       String           @db.Text
+  content       Json            
   excerpt       String?          @db.Text
   published     Boolean          @default(false)
   featuredImage String?

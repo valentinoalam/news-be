@@ -1,5 +1,6 @@
 import { CaslAbilityFactory } from '@/ability.factory';
 import { DatabaseService } from '@/core/database/database.service';
+import { cookieExtractor } from '@/shared/utils/cookie.utils';
 import {
   CanActivate,
   ExecutionContext,
@@ -7,26 +8,27 @@ import {
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
 import { ExtractJwt } from 'passport-jwt';
 
-const cookieExtractor = (req: Request) => {
-  if (req && req.cookies) {
-    return req.cookies['jwt'];
-  }
-};
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
   private logger = new Logger(JwtAuthGuard.name);
 
-  constructor(private caslAbilityFactory: CaslAbilityFactory, private readonly db: DatabaseService) {
+  constructor(
+    private caslAbilityFactory: CaslAbilityFactory,
+    private readonly db: DatabaseService,
+    private readonly config: ConfigService,
+  ) {
     super();
   }
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     try {
-      const accessToken = ExtractJwt.fromExtractors([cookieExtractor])(request);
+      const accessToken = ExtractJwt.fromExtractors([
+        cookieExtractor(request, this.config),
+      ])(request);
 
       if (!accessToken)
         throw new UnauthorizedException('Access token is not set');
@@ -42,11 +44,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') implements CanActivate {
       // If roles are not present in the JWT, query them from the database
       let roles = user.roles || [];
       if (!roles.length) {
-        const userRoles = await this.db.userRoles.findMany({
-          where: { userId: user.id },
-          include: { role: true },
+        const userRoles = await this.db.user.findMany({
+          where: { id: user.id },
         });
-        roles = userRoles.map((userRole) => userRole.role.name);
+        roles = userRoles.map((userRole) => userRole.role);
       }
 
       // Define user abilities based on their roles

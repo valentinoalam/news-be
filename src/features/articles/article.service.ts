@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { slugify } from 'src/shared/utils/slugify';
+import { slugify } from '@/shared/utils/slugify.utils';
 import { DatabaseService } from 'src/core/database/database.service';
-import { PaginationParams } from 'src/shared/utils/pagination';
+import { PaginationParams } from '@/shared/utils/pagination.utils';
 
 @Injectable()
 export class ArticleService {

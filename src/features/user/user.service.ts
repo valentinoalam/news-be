@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { hash } from 'argon2';
 import { DatabaseService } from 'src/core/database/database.service';
-import { PaginationParams } from 'src/shared/utils/pagination';
+import { PaginationParams } from '@/shared/utils/pagination.utils';
 
 @Injectable()
 export class UserService {
@@ -17,8 +17,38 @@ export class UserService {
       },
     });
   }
+  async getIAM(id: string): Promise<any> {
+    const user = await this.db.user.findUnique({
+      where: { id },
+      include: {
+        profile: true,
+      },
+    });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+
+    // Destructure to exclude sensitive fields
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...safeUser } = user;
+
+    return safeUser;
+  }
+
+  async getById(id: string): Promise<any> {
+    // find the user by username
+    const user = await this.db.user.findUnique({
+      where: { id },
+      include: {
+        profile: true,
+      },
+    });
+
+    return user;
+  }
 
   async findAll(params: PaginationParams) {
+    console.log(params);
     return this.db.user.findMany({
       include: {
         profile: true,

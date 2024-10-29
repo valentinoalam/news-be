@@ -1,73 +1,100 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Checklist MVP CMS News Application
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## 1. Manajemen Artikel
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+- [x] **CRUD Artikel**
+  - [x] Buat endpoint untuk membuat artikel.
+  - [x] Buat endpoint untuk membaca daftar artikel.
+  - [x] Buat endpoint untuk memperbarui artikel.
+  - [x] Buat endpoint untuk menghapus artikel.
+- [x] **Kategori Artikel**
+  - [x] CRUD kategori untuk artikel.
+  - [ ] Filter artikel berdasarkan kategori.
+- [ ] **Status Artikel**
+  - [ ] Buat logika status artikel (*draft*, *published*, *archived*).
+- [ ] **Tanggal Publikasi Terjadwal**
+  - [ ] Implementasi fitur penjadwalan publikasi otomatis untuk artikel.
 
-## Description
+## 2. Pengelolaan Media
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- [ ] **Upload dan Manajemen Gambar/Video**
+  - [ ] Fitur upload gambar/video di editor artikel.
+  - [ ] Pengaturan manajemen media (hapus, edit, lihat).
+- [ ] **Optimasi Gambar Otomatis**
+  - [ ] Skala dan kompresi otomatis gambar yang diunggah.
+- [ ] **Galeri Media**
+  - [ ] Buat tampilan galeri untuk melihat semua media yang diunggah.
 
-## Installation
+## 3. Pengaturan SEO dan Metadata
 
-```bash
-$ pnpm install
-```
+- [ ] **SEO Basic**
+  - [ ] Tambahkan kolom untuk metadata (judul, deskripsi, kata kunci).
+- [ ] **URL Ramah SEO**
+  - [ ] Konfigurasi untuk membuat URL otomatis berdasarkan judul artikel.
 
-## Running the app
+## 4. Pengaturan Pengguna dan Hak Akses
 
-```bash
-# development
-$ pnpm run start
+- [ ] **Pengelolaan Pengguna**
+  - [ ] CRUD untuk pengguna dengan peran berbeda (admin, editor, kontributor).
+- [ ] **Role dan Permission**
+  - [ ] Atur izin berdasarkan peran (akses terbatas untuk setiap fitur).
 
-# watch mode
-$ pnpm run start:dev
+## 5. Frontend Pembaca Berita
 
-# production mode
-$ pnpm run start:prod
-```
+- [ ] **Tampilan Artikel**
+  - [ ] Tampilan halaman artikel yang responsif dan menarik.
+- [ ] **Homepage dengan Artikel Terkini**
+  - [ ] Daftar artikel terkini di halaman utama, berdasarkan tanggal dan popularitas.
+- [ ] **Navigasi Berdasarkan Kategori**
+  - [ ] Menu navigasi berdasarkan kategori berita.
 
-## Test
+## 6. Pencarian dan Filter Artikel
 
-```bash
-# unit tests
-$ pnpm run test
+- [ ] **Fitur Pencarian**
+  - [ ] Fungsi pencarian artikel berdasarkan judul, kata kunci, atau penulis.
+- [ ] **Filter Berdasarkan Kategori dan Tanggal**
+  - [ ] Filter artikel berdasarkan kategori atau tanggal publikasi.
 
-# e2e tests
-$ pnpm run test:e2e
+## 7. Autentikasi User
 
-# test coverage
-$ pnpm run test:cov
-```
+- [ ] **Fitur Pencarian**
+  - [ ] Fungsi pencarian artikel berdasarkan judul, kata kunci, atau penulis.
+- [ ] **Filter Berdasarkan Kategori dan Tanggal**
+  - [ ] Filter artikel berdasarkan kategori atau tanggal publikasi.
 
-## Support
+## 8. Komentar dan Interaksi Pembaca
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- [ ] **Fitur Komentar Pembaca**
+  - [ ] Buat kolom komentar pada setiap artikel.
+- [ ] **Pengaturan Moderasi Komentar**
+  - [ ] Buat fitur moderasi komentar sebelum terbit (opsional).
 
-## Stay in touch
+## 9. Dashboard Analitik Dasar
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- [ ] **Data Pembaca**
+  - [ ] Statistik jumlah pembaca untuk setiap artikel.
+- [ ] **Artikel Terpopuler**
+  - [ ] Daftar artikel berdasarkan jumlah tampilan.
+- [ ] **Waktu Pembaca Aktif**
+  - [ ] Data waktu aktif pembaca di situs.
 
-## License
+## 10. Pengelolaan Halaman Statis
 
-Nest is [MIT licensed](LICENSE).
+- [ ] **Halaman Statis**
+  - [ ] CRUD untuk halaman seperti *About Us* dan *Contact*.
+
+## 11. Keamanan dan Performansi Dasar
+
+- [ ] **Proteksi Brute Force Login**
+  - [ ] Sistem keamanan login untuk menghindari serangan brute-force.
+- [ ] **Caching untuk Halaman Utama dan Artikel**
+  - [ ] Caching pada halaman utama dan artikel untuk meningkatkan performa.
+- [ ] **Keamanan SSL dan Otentikasi JWT**
+  - [ ] SSL untuk keamanan data, JWT untuk otentikasi API.
+
+## 12. Notifikasi dan Sistem Pemberitahuan
+
+- [ ] **Pemberitahuan Artikel Terbit**
+  - [ ] Notifikasi bagi pembaca ketika ada artikel baru.
+- [ ] **Notifikasi untuk Kontributor**
+  - [ ] Notifikasi untuk kontributor jika ada komentar atau tanggapan baru.

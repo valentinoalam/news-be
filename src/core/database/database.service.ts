@@ -4,7 +4,6 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
@@ -13,7 +12,7 @@ export class DatabaseService
   implements OnModuleInit, OnModuleDestroy
 {
   // Kl private tidak bisa diakses dari super
-  constructor(config: ConfigService) {
+  constructor() {
     super({
       datasources: {
         db: {

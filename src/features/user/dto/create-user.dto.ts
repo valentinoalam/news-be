@@ -17,14 +17,14 @@ export class CreateUserDto {
   @IsOptional()
   @IsEmail()
   @IsUnique('user', 'email', { message: 'Email already exists' })
-  email?: string | null;
+  email: string | null;
   @ApiProperty({
     type: 'string',
   })
   @IsNotEmpty()
   @IsOptional()
   @IsString()
-  name?: string;
+  name: string;
   @ApiProperty({
     type: 'string',
     minLength: 6,

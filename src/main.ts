@@ -1,22 +1,57 @@
 import { AppModule } from './app/app.module';
-import { NestFactory } from '@nestjs/core';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ValidationPipe } from '@nestjs/common';
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import * as cookieParser from 'cookie-parser';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import { PrismaClientExceptionFilter } from './common/filters/prisma-client-exception.filter';
+import SwaggerDocumentation from './core/config/swagger.config';
+import { DatabaseService } from './core/database/database.service';
 
+declare const module: any;
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: ['log', 'error', 'warn'],
+  });
+  const logger = new Logger('HTTP');
+  const { httpAdapter } = app.get(HttpAdapterHost);
+  const config = app.get(ConfigService);
+  if (config.get('app.corsEnabled')) {
+    app.enableCors({
+      origin: config.get('app.frontendUrl'),
+      methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+      credentials: true,
+    });
+  }
 
-  // Swagger setup
-  const config = new DocumentBuilder()
-    .setTitle('News CMS API')
-    .setDescription('The News CMS API description')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  app.setGlobalPrefix('api');
+  app.use(cookieParser());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Jika ingin diblock data selain data di dto harus dirubah whitelist = true
+      transform: true, // Jika true, maka DataIn akan di transform sesuai dengan deklarinnya, tidak perlu menggunakan ParseXXXPipe
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
+  app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+  const prismaService = app.get(DatabaseService);
+  await prismaService.enableShutdownHooks(app);
 
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
-  await app.listen(3000);
+  if (config.get('app.swaggerEnabled')) {
+    const swaggerDoc = new SwaggerDocumentation(app);
+    swaggerDoc.serve();
+  }
+  const port = process.env.PORT || 6001;
+  await app.listen(port);
+  logger.log('server run on ' + port);
+  if (module.hot) {
+    module.hot.accept();
+    module.hot.dispose(() => app.close());
+  }
 }
 bootstrap();

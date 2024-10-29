@@ -18,7 +18,7 @@ import { CreateAnalyticsEventDto } from './dto/create-analytics.dto';
 import { RolesGuard } from 'src/common/guards';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
-import { PaginationParams } from 'src/shared/utils/pagination';
+import { PaginationParams } from '@/shared/utils/pagination.utils';
 
 @ApiTags('analytics')
 @Controller('analytics')

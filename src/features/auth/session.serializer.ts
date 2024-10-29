@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { PassportSerializer } from '@nestjs/passport';
-import { UsersService } from '../users/services/users.service';
-import { User } from '../users/entities';
+import { UserService } from '../user/user.service';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class SessionSerializer extends PassportSerializer {
-  constructor(private readonly usersService: UsersService) {
+  constructor(private readonly userService: UserService) {
     super();
   }
 
@@ -22,7 +22,7 @@ export class SessionSerializer extends PassportSerializer {
     done: (err: Error, user: Omit<User, 'password'> | null) => void,
   ): Promise<void> {
     try {
-      const user = await this.usersService.getById(payload.id); // Retrieve the user based on the payload (usually the user ID)
+      const user = await this.userService.getById(payload.id); // Retrieve the user based on the payload (usually the user ID)
       done(null, user);
     } catch (err) {
       done(err, null);

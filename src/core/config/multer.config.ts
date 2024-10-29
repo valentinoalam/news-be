@@ -6,13 +6,10 @@ import { Request } from 'express';
 import { diskStorage } from 'multer';
 import { v4 as uuid } from 'uuid';
 import * as path from 'path';
-// Multer configuration
-export const multerConfig = {
-  dest: path.resolve(process.cwd(), '..', process.env.UPLOAD_LOCATION),
-};
+import { ConfigService } from '@nestjs/config';
 
 // Multer upload options
-export const multerOptions = {
+export const multerOptions = (configService: ConfigService) => ({
   // Enable file size limits
   // limits: {
   //   fileSize: +process.env.MAX_FILE_SIZE,
@@ -37,7 +34,11 @@ export const multerOptions = {
   storage: diskStorage({
     // Destination storage path details
     destination: (req: any, file: any, cb: any) => {
-      const uploadPath = multerConfig.dest;
+      const uploadPath = path.resolve(
+        process.cwd(),
+        '..',
+        configService.get('app.mediaPath'),
+      );
       // Create folder if doesn't exist
       if (!existsSync(uploadPath)) {
         mkdirSync(uploadPath);
@@ -56,4 +57,4 @@ export const multerOptions = {
       cb(null, `${uuid(name)}-${randomName}${fileExtName}`);
     },
   }),
-};
+});

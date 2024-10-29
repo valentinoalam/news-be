@@ -15,18 +15,16 @@ export default class SwaggerDocumentation {
     const config = new DocumentBuilder()
       .setTitle(configItem.get('app.name'))
       .setDescription(configItem.get('app.swaggerDescription'))
-      .setVersion('0.1')
+      .setVersion('1.0')
       .addBearerAuth(
         {
           type: 'http',
-          // scheme: 'bearer',
           bearerFormat: 'JWT',
           in: 'header',
         },
         'access-token',
       )
-      .addTag('DNS')
-      .addSecurityRequirements('access-token')
+      // .addSecurityRequirements('access-token')
       .build();
 
     const document = SwaggerModule.createDocument(this.app, config);
@@ -34,9 +32,6 @@ export default class SwaggerDocumentation {
       swaggerOptions: {
         persistAuthorization: true,
       },
-      // customCssUrl: '../swagger/swagger.css',
-      // customfavIcon: '../swagger/favicon.png',
-      customSiteTitle: 'Masjid Management System',
     });
   }
 }
