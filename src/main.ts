@@ -10,10 +10,9 @@ import { DatabaseService } from './core/database/database.service';
 
 declare const module: any;
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    logger: ['log', 'error', 'warn'],
-  });
+  const app = await NestFactory.create(AppModule);
   const logger = new Logger('HTTP');
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   const { httpAdapter } = app.get(HttpAdapterHost);
   const config = app.get(ConfigService);
   if (config.get('app.corsEnabled')) {
@@ -38,7 +37,7 @@ async function bootstrap() {
     }),
   );
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
-  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+
   const prismaService = app.get(DatabaseService);
   await prismaService.enableShutdownHooks(app);
 

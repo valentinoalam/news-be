@@ -1,6 +1,4 @@
 import { join } from 'path';
-
-import { LoggedMiddleware } from '@common/middlewares/logged.middleware';
 import configuration from '@core/config/configuration';
 import {
   MiddlewareConsumer,
@@ -15,13 +13,10 @@ import {
   WinstonModule,
 } from 'nest-winston';
 import * as winston from 'winston';
-
 import { DatabaseModule } from '../core/database/database.module';
-
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthModule } from './health/health.module';
-
 import { ConfigValidator } from '@/core/config/validator/config.validator';
 import { FeaturesModule } from '@/features/features.module';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -40,8 +35,11 @@ import { CacheModule } from '@nestjs/cache-manager';
         new winston.transports.Console({
           format: winston.format.combine(
             winston.format.timestamp(),
-            winston.format.colorize(),
-            winston.format.ms(),
+            // winston.format.colorize(),
+            // winston.format.ms(),
+            // winston.format.printf(({ timestamp, level, message }) => {
+            //   return `${timestamp} [${level}]: ${message}`;
+            // }),
             nestWinstonModuleUtilities.format.nestLike('MyApp', {
               colors: true,
               prettyPrint: true,
@@ -50,8 +48,17 @@ import { CacheModule } from '@nestjs/cache-manager';
             }),
           ),
         }),
+        // You can add additional transports, such as file or HTTP transports
+        new winston.transports.File({
+          filename: 'logs/error.log',
+          level: 'error',
+          format: winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.json(),
+          ),
+        }),
       ],
-      //   // other options
+      level: process.env.NODE_ENV === 'production' ? 'warn' : 'debug',
     }),
     ServeStaticModule.forRootAsync({
       imports: [ConfigModule],
@@ -80,8 +87,6 @@ import { CacheModule } from '@nestjs/cache-manager';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(LoggedMiddleware)
-      .forRoutes({ path: '*', method: RequestMethod.ALL });
+    consumer.apply().forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }
