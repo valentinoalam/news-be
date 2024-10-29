@@ -23,8 +23,8 @@ model Session {
 
 model User {
   id              String           @id @default(cuid())
-  googleId        String?          @unique
-  githubId        String?          @unique
+  provider        String
+  providerAccId   String?          @unique
   email           String           @unique
   name            String
   password        String?

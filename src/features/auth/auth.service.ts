@@ -82,69 +82,28 @@ export class AuthService {
     }
   }
 
-  async handleGoogleAuth(googleUser: any) {
+  async handleAccountAuth(accountUser: any) {
     // Find or create user in the User table
     const user = await this.db.user.upsert({
-      where: { email: googleUser.email },
+      where: { email: accountUser.email },
       update: {
-        name: googleUser.name,
+        name: accountUser.name,
         profile: {
           upsert: {
-            create: { avatar: googleUser.picture },
-            update: { avatar: googleUser.picture },
+            create: { avatar: accountUser.picture },
+            update: { avatar: accountUser.picture },
           },
         },
-        id: googleUser.googleId,
+        providerAccId: accountUser.accountId,
       },
       create: {
-        email: googleUser.email,
-        name: googleUser.name,
+        email: accountUser.email,
+        name: accountUser.name,
         profile: {
-          create: { avatar: googleUser.picture },
+          create: { avatar: accountUser.picture },
         },
-        googleId: googleUser.googleId,
-      },
-    });
-
-    // Generate tokens
-    const tokens = await this.generateTokens(user);
-
-    // Create a session in the Session table
-    await this.db.session.create({
-      data: {
-        sessionToken: tokens.refreshToken, // Using refreshToken as sessionToken for simplicity
-        userId: user.id,
-        expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Set expiration for 7 days
-      },
-    });
-
-    return {
-      user,
-      ...tokens,
-    };
-  }
-
-  async handleGithubAuth(githubUser: any) {
-    // Find or create user in the User table
-    const user = await this.db.user.upsert({
-      where: { email: githubUser.email },
-      update: {
-        name: githubUser.name,
-        profile: {
-          upsert: {
-            create: { avatar: githubUser.picture },
-            update: { avatar: githubUser.picture },
-          },
-        },
-        id: githubUser.googleId,
-      },
-      create: {
-        email: githubUser.email,
-        name: githubUser.name,
-        profile: {
-          create: { avatar: githubUser.picture },
-        },
-        githubId: githubUser.googleId,
+        provider: accountUser.provider,
+        providerAccId: accountUser.googleId,
       },
     });
 
