@@ -8,7 +8,14 @@ export class AuthController {
 
   @Post('google')
   async googleAuth(@Body() googleUser: any) {
+    googleUser.provider = 'google';
     return this.authService.handleAccountAuth(googleUser);
+  }
+
+  @Post('github')
+  async githubAuth(@Body() githubUser: any) {
+    githubUser.provider = 'github';
+    return this.authService.handleAccountAuth(githubUser);
   }
 
   @Post('refresh')
