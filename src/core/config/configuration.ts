@@ -18,6 +18,6 @@ export default registerAs('app', () => ({
   swaggerVersion: env.SWAGGER_VERSION,
   swaggerPath: env.SWAGGER_PATH,
   mediaPath: env.UPLOAD_LOCATION,
-  front: env.FRONTEND_URL,
+  frontendUrl: env.FRONTEND_URL,
   cookieName: env.COOKIE_NAME,
 }));
