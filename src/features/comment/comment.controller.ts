@@ -20,6 +20,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { Comment } from './entities/comment.entity';
+import { ResponseInterface } from '@/common/response/response.interface';
 
 @ApiTags('Comments')
 @Controller('comment')
@@ -65,7 +66,7 @@ export class CommentController {
   })
   async findByArticle(
     @Param('articleId') articleId: string,
-  ): Promise<Comment[]> {
+  ): Promise<ResponseInterface<Comment[]>> {
     return this.commentService.findCommentsByArticle(articleId);
   }
 

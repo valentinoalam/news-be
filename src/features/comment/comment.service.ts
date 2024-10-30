@@ -3,6 +3,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { DatabaseService } from '@/core/database/database.service';
 import { Comment } from './entities/comment.entity';
+import { ResponseSuccess, ResponseError } from '@/common/response/response';
 
 @Injectable()
 export class CommentService {
@@ -28,11 +29,23 @@ export class CommentService {
   }
 
   // Find all comments for a specific article, including nested replies
-  async findCommentsByArticle(articleId: string): Promise<Comment[]> {
-    return this.prisma.comment.findMany({
-      where: { articleId, parentId: null }, // Retrieves only top-level comments for the article
-      include: { replies: true },
-    });
+  async findCommentsByArticle(
+    articleId: string,
+  ): Promise<ResponseSuccess<Comment[]> | ResponseError<any>> {
+    try {
+      const data = await this.prisma.comment.findMany({
+        where: { articleId, parentId: null }, // Retrieves only top-level comments for the article
+        include: { replies: true },
+      });
+      if (!data) {
+        return new ResponseError('No data found', null, {
+          message: 'Data is empty',
+        });
+      }
+      return new ResponseSuccess('Data retrieved successfully', data);
+    } catch (error) {
+      return new ResponseError('Failed to retrieve data', null, error);
+    }
   }
 
   // Update a comment

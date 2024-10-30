@@ -5,6 +5,7 @@ export interface ResponseInterface<T> {
   success: boolean;
   message: string;
   error_message: string;
-  data: any[];
+  totalRecords: number;
+  data: T | T[];
   error: any;
 }

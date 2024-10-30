@@ -3,6 +3,7 @@ import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
 import { Tag } from './entities/tag.entity';
 import { DatabaseService } from '@/core/database/database.service';
+import { ResponseSuccess, ResponseError } from '@/common/response/response';
 
 @Injectable()
 export class TagService {
@@ -16,17 +17,39 @@ export class TagService {
   }
 
   // Find a tag by its ID
-  async findTagById(id: string): Promise<Tag> {
-    const tag = await this.prisma.tag.findUnique({
-      where: { id },
-    });
-    if (!tag) throw new NotFoundException(`Tag with ID ${id} not found`);
-    return tag;
+  async findTagById(
+    id: string,
+  ): Promise<ResponseSuccess<Tag> | ResponseError<any>> {
+    try {
+      // Simulate fetching data
+      const data = await this.prisma.tag.findUnique({
+        where: { id },
+      });
+      if (!data) {
+        return new ResponseError(`Tag with ID ${id} not found`, null, {
+          message: 'Data is empty',
+        });
+      }
+      return new ResponseSuccess('Data retrieved successfully', data);
+    } catch (error) {
+      return new ResponseError('Failed to retrieve data', null, error);
+    }
   }
 
   // Find all tags
-  async findAllTags(): Promise<Tag[]> {
-    return this.prisma.tag.findMany();
+  async findAllTags(): Promise<ResponseSuccess<Tag[]> | ResponseError<any>> {
+    try {
+      // Simulate fetching data
+      const data = await this.prisma.tag.findMany();
+      if (!data) {
+        return new ResponseError('No data found', null, {
+          message: 'Data is empty',
+        });
+      }
+      return new ResponseSuccess('Data retrieved successfully', data);
+    } catch (error) {
+      return new ResponseError('Failed to retrieve data', null, error);
+    }
   }
 
   // Update a tag by ID
