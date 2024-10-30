@@ -10,17 +10,10 @@ export class CategoryService {
   constructor(private prisma: DatabaseService) {}
 
   // Create a new category, with optional parent ID for nested category
-  async createCategory(
-    data: CreateCategoryDto,
-  ): Promise<ResponseSuccess<Category[]> | ResponseError<any>> {
-    try {
-      const category = this.prisma.category.create({
-        data,
-      });
-      return new ResponseSuccess('Data retrieved successfully', category);
-    } catch (error) {
-      return new ResponseError('Failed to retrieve data', null, error);
-    }
+  async createCategory(data: CreateCategoryDto): Promise<Category> {
+    return this.prisma.category.create({
+      data,
+    });
   }
 
   // Find a category by its ID
@@ -61,41 +54,27 @@ export class CategoryService {
   }
 
   // Update a category
-  async updateCategory(
-    id: string,
-    data: UpdateCategoryDto,
-  ): Promise<ResponseError<any> | ResponseSuccess<Category>> {
-    try {
-      const category = await this.prisma.category.update({
-        where: { id },
-        data,
-      });
-      if (!category)
-        throw new NotFoundException(`Category with ID ${id} not found`);
-      return new ResponseSuccess('Data retrieved successfully', category);
-    } catch (error) {
-      return new ResponseError('Failed to retrieve data', null, error);
-    }
+  async updateCategory(id: string, data: UpdateCategoryDto): Promise<Category> {
+    const category = await this.prisma.category.update({
+      where: { id },
+      data,
+    });
+    if (!category)
+      throw new NotFoundException(`Category with ID ${id} not found`);
+    return category;
   }
 
   // Delete a category and optionally its children
-  async deleteCategory(
-    id: string,
-  ): Promise<ResponseError<any> | ResponseSuccess<Category>> {
-    try {
-      const category = await this.prisma.category.findUnique({
-        where: { id },
-      });
-      if (!category)
-        throw new NotFoundException(`Category with ID ${id} not found`);
+  async deleteCategory(id: string): Promise<Category> {
+    const category = await this.prisma.category.findUnique({
+      where: { id },
+    });
+    if (!category)
+      throw new NotFoundException(`Category with ID ${id} not found`);
 
-      const data = this.prisma.category.delete({
-        where: { id },
-      });
-
-      return new ResponseSuccess('Data retrieved successfully', data);
-    } catch (error) {
-      return new ResponseError('Failed to retrieve data', null, error);
-    }
+    // Delete the category
+    return this.prisma.category.delete({
+      where: { id },
+    });
   }
 }
