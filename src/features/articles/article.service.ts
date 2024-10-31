@@ -8,74 +8,140 @@ import {
   getPaginationParams,
   PaginationParams,
 } from '@/shared/utils/pagination.utils';
+import { MediaService } from '../media/media.service';
+import { CreateMediaItemDto } from '../media/dto/create-media.dto';
 
 @Injectable()
 export class ArticleService {
-  remove(id: string) {
-    console.log(id);
-    throw new Error('Method not implemented.');
-  }
-  constructor(private db: DatabaseService) {}
+  constructor(
+    private media: MediaService,
+    private db: DatabaseService,
+  ) {}
 
+  // Create new article with optional media upload handling
   async create(data: CreateArticleDto, authorId: string) {
-    const { categoryId, ...rest } = data;
-    return this.db.article.create({
-      data: {
-        ...rest,
-        slug: slugify(rest.title),
-        author: {
-          connect: { id: authorId },
+    const { categoryId, mediaFiles, ...rest } = data;
+    const dataOut = {
+      status: false,
+      message: '',
+      data: null,
+      logs: {},
+    };
+    try {
+      // Create the article in the database
+      const article = await this.db.article.create({
+        data: {
+          ...rest,
+          slug: slugify(rest.title),
+          author: { connect: { id: authorId } },
+          category: { connect: { id: categoryId } },
+          tags: rest.tags
+            ? {
+                connect: rest.tags.map((id) => ({ id })),
+              }
+            : undefined,
         },
-        category: {
-          connect: { id: categoryId },
-        },
-        tags: {
-          connect: rest.tags.map((id) => ({ id })),
-        },
-      },
-      include: {
-        author: true,
-        category: true,
-        tags: true,
-      },
-    });
+      });
+      if (mediaFiles.length) {
+        const mediaItems: CreateMediaItemDto[] = mediaFiles.map((item) => ({
+          file: item.file,
+          isFeatured: data.featuredImage === item.file.filename,
+          alt: item.alt || '',
+          caption: item.caption || '',
+        }));
+        dataOut.data.mediaItems = await this.media.createMany(
+          article.id,
+          mediaItems,
+        );
+      }
+      dataOut.status = true;
+      dataOut.message = 'Article created successfully';
+      dataOut.data.article = article;
+      dataOut.logs = {
+        timestamp: new Date().toISOString(),
+        action: 'createArticle',
+        authorId,
+      };
+      return dataOut;
+    } catch (error) {
+      dataOut.message = 'Failed to create article';
+      dataOut.logs = {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+        action: 'createArticle',
+        authorId,
+      };
+      return dataOut;
+    }
   }
+
+  // Update article and create a revision before updating
   async updateArticle(
     articleId: string,
     updateData: UpdateArticleDto,
     userId: string,
   ) {
-    // Ambil artikel asli sebelum diperbarui
     const originalArticle = await this.db.article.findUnique({
       where: { id: articleId },
     });
 
     if (!originalArticle) throw new Error('Article not found');
 
-    // Simpan revisi dari artikel asli
     await this.createRevision(articleId, originalArticle);
 
-    // Update artikel dengan data baru
     return await this.update(articleId, updateData, userId);
   }
 
-  async update(id: string, data: UpdateArticleDto, userId: any) {
-    return this.db.article.update({
-      where: { id },
-      data: {
-        ...data,
-        updatedById: userId,
-        slug: data.title ? slugify(data.title) : undefined,
-        tags: data.tags
-          ? {
-              set: data.tags.map((id) => ({ id })),
-            }
-          : undefined,
-      },
-    });
+  // Update article details
+  async update(id: string, data: UpdateArticleDto, userId: string) {
+    const { mediaFiles, ...updateFields } = data;
+    const dataOut = {
+      status: false,
+      message: '',
+      data: null,
+      logs: {},
+    };
+    try {
+      const updatedArticle = await this.db.article.update({
+        where: { id },
+        data: {
+          ...updateFields,
+          updatedById: userId,
+          slug: data.title ? slugify(data.title) : undefined,
+          tags: data.tags
+            ? {
+                set: data.tags.map((id) => ({ id })),
+              }
+            : undefined,
+        },
+      });
+
+      // Update or associate media files if provided
+      if (mediaFiles?.length) {
+        dataOut.data.mediaItems = await this.media.createMany(id, mediaFiles);
+      }
+      dataOut.status = true;
+      dataOut.message = 'Article updated successfully';
+      dataOut.data.article = updatedArticle;
+      dataOut.logs = {
+        timestamp: new Date().toISOString(),
+        action: 'updateArticle',
+        updatedBy: userId,
+      };
+      return dataOut;
+    } catch (error) {
+      dataOut.message = 'Failed to update article';
+      dataOut.logs = {
+        error: error.message,
+        timestamp: new Date().toISOString(),
+        action: 'updateArticle',
+        userId,
+      };
+      return dataOut;
+    }
   }
 
-  async createRevision(articleId: string, data: any) {
+  async createRevision(articleId: string, originalArticle: any) {
     const article = await this.db.article.findUnique({
       where: { id: articleId },
       include: { revisions: true },
@@ -87,11 +153,26 @@ export class ArticleService {
       data: {
         articleId,
         version: newVersion,
-        title: data.title,
-        content: data.content,
-        excerpt: data.excerpt,
-        createdBy: data.updatedById ? data.updatedById : data.authorId,
-        changeLog: data.changeLog,
+        title: originalArticle.title,
+        content: originalArticle.content,
+        excerpt: originalArticle.excerpt,
+        createdBy: originalArticle.updatedById
+          ? originalArticle.updatedById
+          : originalArticle.authorId,
+        changeLog: originalArticle.changeLog,
+      },
+    });
+  }
+
+  // Fetch articles by category
+  async fetchArticlesByCategory(categoryId: string) {
+    return this.db.article.findMany({
+      where: { categoryId },
+      include: {
+        author: true,
+        tags: true,
+        category: true,
+        mediaItems: true,
       },
     });
   }
@@ -164,5 +245,10 @@ export class ArticleService {
       headline: headlineArticle,
       topArticlesByCategory: articlesByCategory,
     };
+  }
+
+  remove(id: string) {
+    console.log(id);
+    throw new Error('Method not implemented.');
   }
 }

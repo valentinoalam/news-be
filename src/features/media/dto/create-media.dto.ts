@@ -1,32 +1,13 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export class CreateMediaItemDto {
-  @ApiProperty({
-    type: 'string',
-  })
-  @IsNotEmpty()
-  @IsString()
-  fileName: string;
-  @ApiProperty({
-    type: 'integer',
-    format: 'int32',
-  })
-  @IsNotEmpty()
-  @IsInt()
-  fileSize: number;
-  @ApiProperty({
-    type: 'string',
-  })
-  @IsNotEmpty()
-  @IsString()
-  mimeType: string;
-  @ApiProperty({
-    type: 'string',
-  })
-  @IsNotEmpty()
-  @IsString()
-  url: string;
+  @IsOptional()
+  @IsBoolean()
+  isFeatured: boolean = false;
+  @ApiPropertyOptional({ type: 'string', format: 'binary' })
+  @IsOptional()
+  file: Express.Multer.File;
   @ApiProperty({
     type: 'string',
     required: false,

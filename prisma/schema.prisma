@@ -11,7 +11,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  // shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model Session {
@@ -63,7 +63,6 @@ model Article {
   content       Json            
   excerpt       String?          @db.Text
   published     Boolean          @default(false)
-  featuredImage String?
   authorId      String
   author        User             @relation(fields: [authorId], references: [id])
   category      Category         @relation(fields: [categoryId], references: [id])
@@ -156,13 +155,15 @@ model Comment {
 
 model MediaItem {
   id          String    @id @default(cuid())
+  articleId   String
   fileName    String
   fileSize    Int
   mimeType    String
   url         String
   alt         String?
   caption     String?   @db.Text
-  articles    Article[]
+  isFeatured  Boolean   @default(false)
+  article     Article   @relation(fields: [articleId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 

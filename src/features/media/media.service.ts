@@ -7,9 +7,18 @@ import { DatabaseService } from 'src/core/database/database.service';
 export class MediaService {
   constructor(private prisma: DatabaseService) {}
 
-  async create(data: CreateMediaItemDto) {
-    return this.prisma.mediaItem.create({
-      data,
+  async createMany(articleId, data: CreateMediaItemDto[]) {
+    return this.prisma.mediaItem.createMany({
+      data: data.map((item) => ({
+        articleId: articleId,
+        isFeatured: item.isFeatured,
+        fileName: item.file.filename,
+        fileSize: item.file.size,
+        mimeType: item.file.mimetype,
+        url: item.file.path,
+        alt: item.alt || '',
+        caption: item.caption || '',
+      })),
     });
   }
 

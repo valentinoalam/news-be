@@ -1,5 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { CreateMediaItemDto } from '@/features/media/dto/create-media.dto';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { JsonValue } from '@prisma/client/runtime/library';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsBoolean,
@@ -7,6 +9,8 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
+  ValidateNested,
 } from 'class-validator';
 
 export class CreateArticleDto {
@@ -38,16 +42,9 @@ export class CreateArticleDto {
   @IsOptional()
   @IsString()
   excerpt?: string | null;
-  @ApiProperty({
-    type: 'string',
-    required: false,
-    nullable: true,
-  })
-  @IsOptional()
-  @IsString()
-  featuredImage?: string | null;
   @IsBoolean()
-  published?: boolean;
+  @IsOptional()
+  published?: boolean = false;
   @ApiProperty({
     type: 'string',
     format: 'date-time',
@@ -65,6 +62,7 @@ export class CreateArticleDto {
   })
   @IsString()
   @IsOptional()
+  @IsUUID('4')
   categoryId: string;
   @ApiProperty({
     type: [String],
@@ -74,5 +72,19 @@ export class CreateArticleDto {
   })
   @IsOptional()
   @IsArray()
+  @IsUUID('4', { each: true })
   tags: string[];
+  @IsString()
+  @IsOptional()
+  featuredImage?: string;
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Array of media file UUIDs',
+  })
+  @IsOptional()
+  @ApiPropertyOptional({ type: () => CreateMediaItemDto, isArray: true })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateMediaItemDto)
+  mediaFiles?: CreateMediaItemDto[];
 }

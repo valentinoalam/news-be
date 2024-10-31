@@ -6,16 +6,20 @@ import {
   Delete,
   Body,
   Param,
+  Request,
   UseGuards,
   Query,
-  Request,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import {
   ApiTags,
+  ApiBody,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
   ApiQuery,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -24,6 +28,9 @@ import { RoleGuard } from 'src/common/guards';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { PaginationParams } from '@/shared/utils/pagination.utils';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { CreateMediaItemDto } from '../media/dto/create-media.dto';
+// import { Request } from 'express';
 
 @ApiTags('articles')
 @Controller('articles')
@@ -37,9 +44,33 @@ export class ArticleController {
   // @Roles(Role.EDITOR, Role.AUTHOR)
   @ApiOperation({ summary: 'Create a new article' })
   @ApiResponse({ status: 201, description: 'Article created successfully' })
-  create(@Body() createArticleDto: CreateArticleDto, @Request() req) {
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('featuredImage', 20))
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        featuredImage: { type: 'string', format: 'binary' },
+        mediaItems: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+        title: { type: 'string' },
+        content: { type: 'string' },
+        categoryId: { type: 'string' },
+        tags: { type: 'array', items: { type: 'string' } },
+        // Add other fields as needed
+      },
+    },
+  })
+  async create(
+    @Body() createArticleDto: CreateArticleDto,
+    @UploadedFiles() mediaFiles: CreateMediaItemDto[],
+    @Request() req,
+  ) {
     const { user } = req;
-    const authorId = user?.id ? user?.id : 'cm2u4rgrh00006034t7bjsa86';
+    const authorId = user.id ? user?.id : 'cm2u4rgrh00006034t7bjsa86';
+    createArticleDto.mediaFiles = mediaFiles;
     return this.articleService.create(createArticleDto, authorId);
   }
 
