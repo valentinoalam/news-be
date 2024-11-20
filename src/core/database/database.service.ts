@@ -11,6 +11,7 @@ export class DatabaseService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  image: any;
   // Kl private tidak bisa diakses dari super
   constructor() {
     super({

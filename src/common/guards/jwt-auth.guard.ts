@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { ExtractJwt } from 'passport-jwt';
 import { AuthService } from '@/features/auth/auth.service';
-import { cookieExtractor } from '@/shared/utils/cookie.utils';
+import { cookieExtractor } from '@/shared/utils/cookie.util';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators';
 

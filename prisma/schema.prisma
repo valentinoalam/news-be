@@ -11,39 +11,57 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+  // shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model PageView {
+  id        String   @id @default(uuid())
+  userId    String
+  url       String
+  source    String?
+  referrer  String?
+  createdAt DateTime @default(now())
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String   @id @default(uuid())
+  sessionToken  String?   @unique
+  userId        String
+  expires       DateTime?
+  startTime     DateTime
+  endTime       DateTime?
+  duration      Float?    // in seconds
+  deviceType    String?
+  location      String?
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id              String           @id @default(cuid())
+  id              String           @id @default(uuid())
   provider        String
   providerAccId   String?          @unique
   email           String           @unique
   name            String
   password        String?
-  role            Role            @default(SUBSCRIBER)
-  articles        Article[]
-  comments        Comment[]
   profile         Profile?
+  role            Role            @default(SUBSCRIBER)
+
+
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+  articles        Article[]
+  comments        Comment[]
   subscriptions   NewsletterSubscription[]
   analyticsEvents AnalyticsEvent[]
 
   @@map("users")
-  Session Session[]
+  sessions Session[]
+  likes Like[]
+  articleViews View[]
 }
 
 model Profile {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   bio         String?  @db.Text
   avatar      String?
   socialMedia Json?
@@ -54,37 +72,93 @@ model Profile {
 
   @@map("profiles")
 }
+model AnalyticsEvent {
+  id          String   @id @default(uuid())
+  eventType   String
+  payload     Json
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  articleId   String?
+  article     Article? @relation(fields: [articleId], references: [id])
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
 
+  @@map("analytics_events")
+}
+
+enum ArticleStatus {
+  Draft
+  Published
+  Archived
+}
 model Article {
-  id            String           @id @default(cuid())
+  id            String           @id @default(uuid())
   categoryId    String
   title         String
   slug          String           @unique
-  content       Json            
+  coverImageId  String?          @unique
   excerpt       String?          @db.Text
-  published     Boolean          @default(false)
+  content       String
+  html          String?            
   authorId      String
   author        User             @relation(fields: [authorId], references: [id])
   category      Category         @relation(fields: [categoryId], references: [id])
-  tags          Tag[]
+  status        ArticleStatus    @default(Draft) 
+  clickTimes    Int              @default(0)
+  views          View[]
+  shares        Share[]   
+  likes         Like[]
   comments      Comment[]
-  viewCount     Int              @default(0)
   createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
+  updatedAt     DateTime?         @updatedAt
   publishedAt   DateTime?
   updatedById   String?
-  publishedById String?
   metadata      ArticleMetadata?
   revisions     ArticleRevision[]
   mediaItems    MediaItem[]
   analytics     AnalyticsEvent[]
 
   @@map("articles")
+
+
+}
+model View {
+  id        String   @id @default(uuid())
+  articleId    String   @db.Char(36)
+  article   Article     @relation(fields: [articleId], references: [id])
+  userId    String   @db.Char(36)
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+model Like {
+  id           String      @id @default(uuid())
+  userId       String       @db.Char(36)
+  articleId    String
+  user         User        @relation(fields: [userId], references: [id])
+  article      Article     @relation(fields: [articleId], references: [id])
+  createdAt    DateTime @default(now())
+
+  @@unique([articleId, userId])
+}
+
+enum SocialShare {
+  Facebook
+  Whatsapp
+  Twitter
+}
+
+model Share {
+  id            String   @id @default(uuid())
+  articleId     String   @db.Char(36)
+  article       Article     @relation(fields: [articleId], references: [id])
+
+  createdAt     DateTime @default(now())
 }
 
 model ArticleRevision {
-  id          String   @id @default(cuid())
-  articleId   String
+  id          String   @id @default(uuid())
+  articleId   String   @db.Char(36)
   article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
   title       String
   content     Json
@@ -98,12 +172,13 @@ model ArticleRevision {
   @@map("article_revisions")
 }
 model ArticleMetadata {
-  id          String   @id @default(cuid())
-  articleId   String   @unique
+  id          String   @id @default(uuid())
+  articleId   String   @unique @db.Char(36)
   article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  author      String[]
   seoTitle    String?
-  seoDesc     String?  @db.Text
-  keywords    String[]
+  abstract    String?  @db.Text
+  keywords    Tag[]
   readingTime Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -112,12 +187,12 @@ model ArticleMetadata {
 }
 
 model Category {
-  id          String    @id @default(cuid())
+  id          String    @id @default(uuid())
   name        String    @unique
   slug        String    @unique
   description String?   @db.Text
   articles    Article[]
-  parentId    String?
+  parentId    String?   @db.Char(36)
   parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryHierarchy")
   createdAt   DateTime  @default(now())
@@ -127,24 +202,21 @@ model Category {
 }
 
 model Tag {
-  id          String    @id @default(cuid())
+  id          String    @id @default(uuid())
   name        String    @unique
-  slug        String    @unique
-  articles    Article[]
+  articles    ArticleMetadata[]
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
   @@map("tags")
 }
 
 model Comment {
-  id        String    @id @default(cuid())
+  id        String    @id @default(uuid())
   content   String    @db.Text
-  articleId String
+  articleId String    @db.Char(36)
   article   Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
-  authorId  String
+  authorId  String    @db.Char(36)
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  parentId  String?
+  parentId  String?   @db.Char(36)
   parent    Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
   replies   Comment[] @relation("CommentReplies")
   createdAt DateTime  @default(now())
@@ -154,15 +226,15 @@ model Comment {
 }
 
 model MediaItem {
-  id          String    @id @default(cuid())
-  articleId   String
+  id          String    @id @default(uuid())
+  articleId   String    @db.Char(36)
+  index       Int
   fileName    String
   fileSize    Int
   mimeType    String
   url         String
   alt         String?
   caption     String?   @db.Text
-  isFeatured  Boolean   @default(false)
   article     Article   @relation(fields: [articleId], references: [id])
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -171,9 +243,9 @@ model MediaItem {
 }
 
 model NewsletterSubscription {
-  id          String    @id @default(cuid())
+  id          String    @id @default(uuid())
   email       String    @unique
-  userId      String?
+  userId      String?   @db.Char(36)
   user        User?     @relation(fields: [userId], references: [id])
   status      SubscriptionStatus @default(ACTIVE)
   categories  Category[]
@@ -183,20 +255,6 @@ model NewsletterSubscription {
   @@map("newsletter_subscriptions")
 }
 
-model AnalyticsEvent {
-  id          String   @id @default(cuid())
-  eventType   String
-  payload     Json
-  userId      String?
-  user        User?    @relation(fields: [userId], references: [id])
-  articleId   String?
-  article     Article? @relation(fields: [articleId], references: [id])
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-
-  @@map("analytics_events")
-}
 
 enum Role {
   ADMIN

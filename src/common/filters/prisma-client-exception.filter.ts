@@ -31,9 +31,22 @@ export class PrismaClientExceptionFilter extends BaseExceptionFilter {
    * @see https://www.prisma.io/docs/reference/api-reference/error-reference#prisma-client-query-engine
    */
   private readonly defaultMapping = {
-    P2000: HttpStatus.BAD_REQUEST,
-    P2002: HttpStatus.CONFLICT,
-    P2025: HttpStatus.NOT_FOUND,
+    P2000: {
+      statusCode: HttpStatus.BAD_REQUEST,
+      errorMessage: 'Input type not match',
+    },
+    P2002: {
+      statusCode: HttpStatus.CONFLICT,
+      errorMessage: 'Resource already exists',
+    },
+    P2003: {
+      statusCode: HttpStatus.BAD_REQUEST,
+      errorMessage: 'Incorrect Resource Reference',
+    },
+    P2025: {
+      statusCode: HttpStatus.NOT_FOUND,
+      errorMessage: 'Resource not found',
+    },
   };
 
   private readonly userDefinedMapping?: ErrorCodesStatusMapping;

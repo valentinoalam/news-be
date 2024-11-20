@@ -1,7 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Article } from '@/features/articles/entities/article.entity';
-import { User } from '@/features/user/entities/user.entity';
 
+type Author = {
+  name: string;
+  profile: {
+    avatar: string;
+  };
+};
 export class Comment {
   @ApiProperty({
     type: 'string',
@@ -25,10 +30,10 @@ export class Comment {
   })
   authorId: string;
   @ApiProperty({
-    type: () => User,
+    type: () => Object,
     required: false,
   })
-  author?: User;
+  author?: Author;
   @ApiProperty({
     type: 'string',
     nullable: true,

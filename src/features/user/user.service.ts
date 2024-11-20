@@ -3,7 +3,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { hash } from 'argon2';
 import { DatabaseService } from 'src/core/database/database.service';
-import { PaginationParams } from '@/shared/utils/pagination.utils';
+import { PaginationParams } from '@/shared/utils/pagination.util';
 
 @Injectable()
 export class UserService {

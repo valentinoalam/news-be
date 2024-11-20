@@ -1,6 +1,6 @@
 import { CreateMediaItemDto } from '@/features/media/dto/create-media.dto';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { JsonValue } from '@prisma/client/runtime/library';
+// import { JsonValue } from '@prisma/client/runtime/library';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -27,13 +27,16 @@ export class CreateArticleDto {
   @IsNotEmpty()
   @IsString()
   slug: string;
-  @ApiProperty({
-    type: Object,
-    description: 'JSON content',
-    example: { key: 'value' }, // Provide an example if desired
-  })
+  // @ApiProperty({
+  //   type: Object,
+  //   description: 'JSON content',
+  //   example: { key: 'value' }, // Provide an example if desired
+  // })
+  // @IsNotEmpty()
+  // content: JsonValue;
   @IsNotEmpty()
-  content: JsonValue;
+  @IsString()
+  content: string;
   @ApiProperty({
     type: 'string',
     required: false,
@@ -81,6 +84,9 @@ export class CreateArticleDto {
     type: [String],
     description: 'Array of media file UUIDs',
   })
+  @IsArray()
+  @IsOptional()
+  imageIds?: string[];
   @IsOptional()
   @ApiPropertyOptional({ type: () => CreateMediaItemDto, isArray: true })
   @IsArray()

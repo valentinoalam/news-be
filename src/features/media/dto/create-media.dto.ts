@@ -24,4 +24,5 @@ export class CreateMediaItemDto {
   @IsOptional()
   @IsString()
   caption?: string | null;
+  index: number;
 }

@@ -1,4 +1,4 @@
-import { cookieExtractor } from '@/shared/utils/cookie.utils';
+import { cookieExtractor } from '@/shared/utils/cookie.util';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';

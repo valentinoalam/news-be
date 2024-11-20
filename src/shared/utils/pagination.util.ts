@@ -7,22 +7,6 @@ export interface PaginationParams {
   order?: 'asc' | 'desc';
 }
 
-export function getPaginationParams(params: PaginationParams) {
-  const page = Math.max(1, params.page || 1);
-  const limit = Math.max(1, Math.min(100, params.limit || 10));
-  const skip = (page - 1) * limit;
-  if (!params.orderBy) params.orderBy = 'createdAt';
-  return {
-    skip,
-    limit,
-    orderBy: params.orderBy
-      ? {
-          [params.orderBy]: params.order || 'desc',
-        }
-      : undefined,
-  };
-}
-
 export interface PaginatedResponse<T> {
   data: T[];
   meta: {
@@ -31,6 +15,19 @@ export interface PaginatedResponse<T> {
     limit: number;
     totalPages: number;
   };
+}
+
+export function getPaginationParams(params: PaginationParams) {
+  const page = Math.max(1, params.page || 1);
+  const limit = Math.max(1, Math.min(100, params.limit || 10));
+  const skip = (page - 1) * limit;
+  if (!params.orderBy) params.orderBy = 'createdAt';
+  const data = {
+    skip,
+    limit,
+    orderBy: { [params.orderBy]: params.order },
+  };
+  return data;
 }
 
 export async function getPaginatedData<T>(

@@ -4,6 +4,7 @@ import { MediaController } from './media.controller';
 import { MulterModule } from '@nestjs/platform-express';
 import { multerOptions } from '@/core/config/multer.config';
 import { ConfigService } from '@nestjs/config';
+import { StorageService } from './storage/storage.service';
 
 @Module({
   imports: [
@@ -14,6 +15,6 @@ import { ConfigService } from '@nestjs/config';
     }),
   ],
   controllers: [MediaController],
-  providers: [MediaService],
+  providers: [MediaService, StorageService],
 })
 export class MediaModule {}

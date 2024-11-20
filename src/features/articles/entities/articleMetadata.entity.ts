@@ -24,7 +24,7 @@ export class ArticleMetadata {
     type: 'string',
     nullable: true,
   })
-  seoDesc: string | null;
+  abstract: string | null;
   @ApiProperty({
     type: 'string',
     isArray: true,
