@@ -50,7 +50,7 @@ export class CommentController {
   })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async findOne(@Param('id') id: string): Promise<Comment> {
-    return this.commentService.findCommentById(id);
+    return await this.commentService.findCommentById(id);
   }
 
   // Get all top-level comments for a specific article, including nested replies
@@ -67,7 +67,7 @@ export class CommentController {
   async findByArticle(
     @Param('articleId') articleId: string,
   ): Promise<ResponseInterface<Comment[]>> {
-    return this.commentService.findCommentsByArticle(articleId);
+    return await this.commentService.findCommentsByArticle(articleId);
   }
 
   // Update a comment
@@ -84,7 +84,7 @@ export class CommentController {
     @Param('id') id: string,
     @Body() data: UpdateCommentDto,
   ): Promise<Comment> {
-    return this.commentService.updateComment(id, data);
+    return await this.commentService.updateComment(id, data);
   }
 
   // Delete a comment by ID
@@ -98,6 +98,6 @@ export class CommentController {
   })
   @ApiResponse({ status: 404, description: 'Comment not found' })
   async remove(@Param('id') id: string): Promise<void> {
-    await this.commentService.deleteComment(id);
+    await await this.commentService.deleteComment(id);
   }
 }

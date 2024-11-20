@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
 import { Article } from '@/features/articles/entities/article.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 type Author = {
   name: string;
@@ -7,6 +7,8 @@ type Author = {
     avatar: string;
   };
 };
+type ArticlePart = Partial<Article>;
+
 export class Comment {
   @ApiProperty({
     type: 'string',
@@ -21,10 +23,10 @@ export class Comment {
   })
   articleId: string;
   @ApiProperty({
-    type: () => Article,
+    type: () => Object,
     required: false,
   })
-  article?: Article;
+  article?: ArticlePart;
   @ApiProperty({
     type: 'string',
   })

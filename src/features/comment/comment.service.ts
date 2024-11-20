@@ -18,9 +18,9 @@ export class CommentService {
   }
 
   // Find a comment by ID, with nested replies
-  async findCommentByArticleId(articleId: string): Promise<Comment[]> {
-    const comments = await this.prisma.comment.findMany({
-      where: { articleId },
+  async findCommentById(id: string): Promise<Comment> {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id },
       include: {
         author: {
           select: {
@@ -30,6 +30,11 @@ export class CommentService {
                 avatar: true,
               },
             },
+          },
+        },
+        article: {
+          select: {
+            title: true,
           },
         },
         replies: {
@@ -47,13 +52,10 @@ export class CommentService {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
     });
-    if (!comments)
-      throw new NotFoundException(
-        `Comment for article with Id ${articleId} not found`,
-      );
-    return comments;
+    if (!comment)
+      throw new NotFoundException(`Comment with Id ${id} not found`);
+    return comment;
   }
 
   // Find all comments for a specific article, including nested replies
