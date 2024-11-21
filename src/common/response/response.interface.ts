@@ -1,11 +1,20 @@
 // success: true => message, data
 // success: false => errorMessage, error
 
-export interface ResponseInterface<T> {
+export interface IApiResponse<T> {
   success: boolean;
-  message: string;
-  error_message: string;
-  totalRecords: number;
+  statusCode: number;
+  message?: string;
   data: T | T[];
-  error: any;
+  metadata?: {
+    totalRecords?: number;
+    page?: number;
+    limit?: number;
+    totalPages?: number;
+  };
+  errors?: Array<{
+    field?: string;
+    code?: string;
+    message: string;
+  }>;
 }

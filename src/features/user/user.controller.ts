@@ -26,8 +26,8 @@ import { PaginationParams } from '@/shared/utils/pagination.util';
 
 @ApiTags('users')
 @Controller('users')
-// @UseGuards(RoleGuard)
-// @ApiBearerAuth()
+@UseGuards(RoleGuard)
+@ApiBearerAuth()
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}

@@ -1,7 +1,12 @@
 import { DatabaseService } from '@core/database/database.service';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { Session } from '@prisma/client';
 import { hash } from 'argon2';
 
 @Injectable()
@@ -20,6 +25,11 @@ export class AuthService {
     return await hash(combined);
   }
 
+  /**
+   * Verifies the user's session from NextAuth.
+   * @param sessionId - The session identifier from the request.
+   * @returns True if session is valid, false otherwise.
+   */
   async validateSession(sessionToken: string) {
     if (!sessionToken) {
       throw new UnauthorizedException('No session token provided');
@@ -60,6 +70,24 @@ export class AuthService {
     }
   }
 
+  /**
+   * Fetches a session based on the session ID.
+   * @param sessionId - The session ID to look up.
+   * @returns The session data if found.
+   * @throws NotFoundException if the session does not exist.
+   */
+  async getSession(sessionId: string): Promise<Session> {
+    const session = await this.db.session.findUnique({
+      where: { id: sessionId },
+    });
+
+    if (!session) {
+      throw new NotFoundException(`Session with ID ${sessionId} not found`);
+    }
+
+    return session;
+  }
+
   // Keep JWT validation for flexibility
   async validateToken(bearerToken: string) {
     try {
@@ -92,9 +120,12 @@ export class AuthService {
     }
   }
 
+  /**
+   * Create user and session using social account.
+   */
   async handleAccountAuth(accountUser: any) {
     // Find or create user in the User table
-    const user = await this.db.user.upsert({
+    const userData = await this.db.user.upsert({
       where: { email: accountUser.email },
       update: {
         name: accountUser.name,
@@ -116,25 +147,37 @@ export class AuthService {
         providerAccId: accountUser.googleId,
       },
     });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, providerAccId, ...user } = userData;
 
-    // Generate tokens
     const tokens = await this.generateTokens(user);
 
-    // Create a session in the Session table
-    await this.db.session.create({
+    // Create session
+    const session = await this.db.session.create({
       data: {
         sessionToken: tokens.refreshToken, // Using refreshToken as sessionToken for simplicity
         userId: user.id,
+        startTime: new Date(), // Session start time is now
+        endTime: null, // End time is initially null
+        duration: null, // Duration will be calculated later
+        deviceType: accountUser.deviceType || null, // Device type (from accountUser or default null)
+        location: accountUser.location || null, // Location (from accountUser or default null)
         expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Set expiration for 7 days
       },
     });
 
     return {
       user,
+      session,
       ...tokens,
     };
   }
 
+  /**
+   * Refreshes the authentication token.
+   * @param refreshToken - The refresh token to obtain a new access token.
+   * @returns A response containing the new access token.
+   */
   async refreshToken(refreshToken: string) {
     try {
       // Verify refresh token
@@ -179,6 +222,11 @@ export class AuthService {
     }
   }
 
+  /**
+   * Logs out the user, invalidating the session.
+   * @param sessionId - The session identifier to invalidate.
+   * @returns A response indicating success or failure.
+   */
   async logout(user: any) {
     // Remove all sessions for the user
     await this.db.session.deleteMany({

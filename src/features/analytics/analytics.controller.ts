@@ -28,6 +28,7 @@ import { PaginationParams } from '@/shared/utils/pagination.util';
 @Controller('analytics')
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
+
   @Post('events')
   @ApiOperation({ summary: 'Track an analytics event' })
   trackEvent(@Body() createAnalyticsEventDto: CreateAnalyticsEventDto) {
@@ -54,11 +55,16 @@ export class AnalyticsController {
     return this.analyticsService.getUserAnalytics(userId, params);
   }
 
-  
   // User Engagement endpoints
   @Get('users/visits')
-  async getUserVisits(@Query('startDate') startDate: string, @Query('endDate') endDate: string) {
-    return this.analyticsService.getUserVisits(new Date(startDate), new Date(endDate));
+  async getUserVisits(
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    return this.analyticsService.getUserVisits(
+      new Date(startDate),
+      new Date(endDate),
+    );
   }
 
   @Get('users/locations')

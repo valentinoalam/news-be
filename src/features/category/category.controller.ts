@@ -8,6 +8,7 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  NotFoundException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,10 +21,12 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from './entities/category.entity';
 import { CategoryService } from './category.service';
+import { ICategoryController } from '@/shared/interfaces/category.interface';
+import { ResponseError, ResponseSuccess } from '@/common/response/response';
 
 @ApiTags('Categories')
 @Controller('category')
-export class CategoryController {
+export class CategoryController implements ICategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
   @Post()
@@ -35,7 +38,21 @@ export class CategoryController {
   })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
   async create(@Body() data: CreateCategoryDto) {
-    return this.categoryService.createCategory(data);
+    try {
+      const category = await this.categoryService.createCategory(data);
+
+      return new ResponseSuccess<Category>(
+        HttpStatus.CREATED,
+        'Category created successfully',
+        category,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.BAD_REQUEST,
+        'Failed to create category',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // Get a category by ID, with nested children
@@ -49,7 +66,27 @@ export class CategoryController {
   })
   @ApiResponse({ status: 404, description: 'Category not found' })
   async findOne(@Param('id') id: string) {
-    return this.categoryService.findCategoryById(id);
+    try {
+      const category = await this.categoryService.findCategoryById(id);
+
+      if (!category) {
+        throw new NotFoundException(`Category with ID ${id} not found`);
+      }
+
+      return new ResponseSuccess<Category>(
+        HttpStatus.OK,
+        'Category fetched successfully',
+        category,
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof NotFoundException
+          ? error.message
+          : 'An error occurred while fetching the category';
+      return new ResponseError(HttpStatus.NOT_FOUND, errorMessage, [
+        { message: errorMessage },
+      ]);
+    }
   }
 
   // Get all root categories with nested children
@@ -61,7 +98,28 @@ export class CategoryController {
     type: [Category],
   })
   async findAll() {
-    return this.categoryService.findAllCategories();
+    try {
+      const categories = await this.categoryService.findAllCategories();
+      if (categories.length === 0) {
+        throw new NotFoundException('No categories found');
+      }
+      // Return a consistent success response
+      return new ResponseSuccess<Category[]>(
+        HttpStatus.OK,
+        'Categories fetched successfully',
+        categories,
+        {
+          totalRecords: categories.length,
+        },
+      );
+    } catch (error) {
+      // Return a consistent error response
+      return new ResponseError(
+        HttpStatus.NOT_FOUND,
+        'Failed to fetch categories',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // Update a category
@@ -75,7 +133,21 @@ export class CategoryController {
   })
   @ApiResponse({ status: 404, description: 'Categorynot found' })
   async update(@Param('id') id: string, @Body() data: UpdateCategoryDto) {
-    return this.categoryService.updateCategory(id, data);
+    try {
+      const category = await this.categoryService.updateCategory(id, data);
+
+      return new ResponseSuccess<Category>(
+        HttpStatus.CREATED,
+        'Category created successfully',
+        category,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.BAD_REQUEST,
+        'Failed to create category',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // Delete a category by ID
@@ -89,6 +161,26 @@ export class CategoryController {
   })
   @ApiResponse({ status: 404, description: 'Category not found' })
   async remove(@Param('id') id: string) {
-    return this.categoryService.deleteCategory(id);
+    try {
+      const deletedCategory = await this.categoryService.deleteCategory(id);
+
+      if (!deletedCategory) {
+        throw new NotFoundException(`Category with ID ${id} not found`);
+      }
+
+      return new ResponseSuccess<Category>(
+        HttpStatus.OK,
+        'Category deleted successfully',
+        deletedCategory,
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof NotFoundException
+          ? error.message
+          : 'Failed to delete category';
+      return new ResponseError(HttpStatus.NOT_FOUND, errorMessage, [
+        { message: errorMessage },
+      ]);
+    }
   }
 }

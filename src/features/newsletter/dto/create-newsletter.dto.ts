@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateNewsletterSubscriptionDto {
   @ApiProperty({
@@ -8,4 +8,19 @@ export class CreateNewsletterSubscriptionDto {
   @IsNotEmpty()
   @IsString()
   email: string;
+  @ApiProperty({
+    type: [String],
+    isArray: true,
+    required: false,
+    nullable: true,
+  })
+  @IsOptional()
+  @IsArray()
+  categoryIds?: string[];
+  @ApiProperty({
+    type: 'string',
+  })
+  @IsNotEmpty()
+  @IsString()
+  userId?: string;
 }

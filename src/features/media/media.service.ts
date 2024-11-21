@@ -3,16 +3,17 @@ import { CreateMediaItemDto } from './dto/create-media.dto';
 // import { UpdateMediaDto } from './dto/update-media.dto';
 import { DatabaseService } from 'src/core/database/database.service';
 import { StorageService } from './storage/storage.service';
+import { IMediaService } from '@/shared/interfaces/media.interface';
 
 @Injectable()
-export class MediaService {
+export class MediaService implements IMediaService {
   constructor(
     private prisma: DatabaseService,
     private storageService: StorageService,
   ) {}
 
   async createMany(articleId, data: CreateMediaItemDto[]) {
-    return this.prisma.mediaItem.createMany({
+    return await this.prisma.mediaItem.createMany({
       data: data.map((item) => ({
         articleId: articleId,
         index: item.index,
@@ -38,6 +39,9 @@ export class MediaService {
           connect: { id: mediaId },
         },
       },
+      include: {
+        mediaItems: true,
+      },
     });
   }
 
@@ -53,7 +57,11 @@ export class MediaService {
       data: {
         url,
         sessionId,
-        tempId: sessionId,
+        fileName: file.filename,
+        fileSize: file.size,
+        mimeType: file.mimetype,
+        alt: '',
+        caption: '',
       },
     });
 
@@ -61,38 +69,6 @@ export class MediaService {
   }
 
   async makePermanent(sessionId: string, articleId: string) {
-    // Find all temp images for this session
-    const tempImages = await this.prisma.mediaItem.findMany({
-      where: {
-        sessionId,
-        articleId: null,
-      },
-    });
-
-    // Move each image to permanent storage and update records
-    const updates = tempImages.map(async (image) => {
-      const newPath = `articles/${articleId}/images/${image.path.split('/').pop()}`;
-
-      // Move file in storage
-      const newUrl = await this.storageService.move(image.path, newPath);
-
-      // Update image record
-      return this.prisma.mediaItem.update({
-        where: { id: image.id },
-        data: {
-          url: newUrl,
-          path: newPath,
-          articleId,
-          sessionId: null,
-          tempId: null,
-        },
-      });
-    });
-
-    await Promise.all(updates);
-  }
-
-  async makePermanent3(sessionId: string, articleId: string) {
     // Find all temp images for this session
     const tempImages = await this.prisma.image.findMany({
       where: {
@@ -122,7 +98,6 @@ export class MediaService {
           path: newPath,
           articleId,
           sessionId: null,
-          tempId: null,
         },
       });
     });
@@ -145,59 +120,7 @@ export class MediaService {
       });
     }
   }
-  async makePermanent1(sessionId: string, articleId: string) {
-    // Find all temp images for this session
-    const tempImages = await this.prisma.image.findMany({
-      where: {
-        sessionId,
-        articleId: null,
-      },
-    });
 
-    // Create a mapping of old URLs to new URLs
-    const urlMapping = new Map<string, string>();
-
-    // Move each image to permanent storage and update records
-    const updates = tempImages.map(async (image) => {
-      const newPath = `articles/${articleId}/images/${image.path.split('/').pop()}`;
-
-      // Move file in storage
-      const newUrl = await this.storageService.move(image.path, newPath);
-
-      // Store the URL mapping
-      urlMapping.set(image.url, newUrl);
-
-      // Update image record
-      return this.prisma.mediaItem.update({
-        where: { id: image.id },
-        data: {
-          url: newUrl,
-          path: newPath,
-          articleId,
-          sessionId: null,
-          tempId: null,
-        },
-      });
-    });
-
-    await Promise.all(updates);
-
-    // Update article content with new URLs
-    const article = await this.prisma.article.findUnique({
-      where: { id: articleId },
-    });
-
-    if (article && article.content) {
-      const updatedContent = this.replaceImageUrls(article.content, urlMapping);
-
-      await this.prisma.article.update({
-        where: { id: articleId },
-        data: {
-          content: updatedContent,
-        },
-      });
-    }
-  }
   async cleanupTempFiles(sessionId: string) {
     const tempImages = await this.prisma.mediaItem.findMany({
       where: {
@@ -209,11 +132,44 @@ export class MediaService {
     // Delete files from storage and database
     await Promise.all(
       tempImages.map(async (image) => {
-        await this.storageService.deleteImage(image.path);
+        this.storageService.deleteImage(image.url);
         await this.prisma.mediaItem.delete({
           where: { id: image.id },
         });
       }),
     );
+  }
+
+  private replaceImageUrls(content: any, urlMapping: Map<string, string>): any {
+    // If content is an array (Plate.js content is an array of nodes)
+    if (Array.isArray(content)) {
+      return content.map((node) => this.replaceImageUrls(node, urlMapping));
+    }
+
+    // If content is an object
+    if (content && typeof content === 'object') {
+      const newContent = { ...content };
+
+      // Replace URL in image elements
+      if (
+        content.type === 'image' &&
+        content.url &&
+        urlMapping.has(content.url)
+      ) {
+        newContent.url = urlMapping.get(content.url);
+      }
+
+      // Recursively process all object properties
+      for (const key in newContent) {
+        if (Object.prototype.hasOwnProperty.call(newContent, key)) {
+          newContent[key] = this.replaceImageUrls(newContent[key], urlMapping);
+        }
+      }
+
+      return newContent;
+    }
+
+    // Return primitive values as is
+    return content;
   }
 }

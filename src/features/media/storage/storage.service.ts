@@ -40,6 +40,7 @@ export class StorageService {
     }
     return fullPath;
   }
+
   // Ensure directories exist
   private async ensureUploadDir() {
     const dirs = ['temp', 'articles'].map((dir) => join(this.uploadDir, dir));
@@ -144,39 +145,6 @@ export class StorageService {
     } catch (error) {
       throw new Error('Failed to delete the file');
     }
-  }
-
-  private replaceImageUrls(content: any, urlMapping: Map<string, string>): any {
-    // If content is an array (Plate.js content is an array of nodes)
-    if (Array.isArray(content)) {
-      return content.map((node) => this.replaceImageUrls(node, urlMapping));
-    }
-
-    // If content is an object
-    if (content && typeof content === 'object') {
-      const newContent = { ...content };
-
-      // Replace URL in image elements
-      if (
-        content.type === 'image' &&
-        content.url &&
-        urlMapping.has(content.url)
-      ) {
-        newContent.url = urlMapping.get(content.url);
-      }
-
-      // Recursively process all object properties
-      for (const key in newContent) {
-        if (Object.prototype.hasOwnProperty.call(newContent, key)) {
-          newContent[key] = this.replaceImageUrls(newContent[key], urlMapping);
-        }
-      }
-
-      return newContent;
-    }
-
-    // Return primitive values as is
-    return content;
   }
 
   // Recursively clean up empty directories

@@ -1,53 +1,95 @@
-import { ResponseInterface } from './response.interface';
-
-export class ResponseError<T> implements ResponseInterface<T> {
-  message: string;
-  data: T | T[];
-  error_message: string | null;
-  error: any;
-  totalRecords: number;
+import { IApiResponse } from './response.interface';
+export class ResponseError<T> implements IApiResponse<T> {
   success: boolean;
+  statusCode: number;
+  message?: string;
+  data: T | T[] | null;
+  metadata?: {
+    totalRecords?: number;
+    page?: number;
+    limit?: number;
+    totalPages?: number;
+  };
+  errors?: Array<{
+    field?: string;
+    code?: string;
+    message: string;
+  }>;
 
-  constructor(infoMessage: string, data?: T, error?: any) {
+  constructor(
+    statusCode: number,
+    message: string,
+    errorDetails?: Array<{ field?: string; code?: string; message: string }>,
+    data: T | T[] | null = null,
+    metadata?: {
+      totalRecords?: number;
+      page?: number;
+      limit?: number;
+      totalPages?: number;
+    },
+  ) {
     this.success = false;
-    this.message = infoMessage;
-    this.data = data ?? null;
-    this.error_message = error?.message || null;
-    this.error = error;
-    this.totalRecords = Array.isArray(data) ? data.length : 0;
+    this.statusCode = statusCode;
+    this.message = message;
+    this.data = data;
+    this.metadata = metadata;
+    this.errors = errorDetails;
 
-    console.warn(
-      `${new Date().toISOString()} - [ResponseError]: ${infoMessage}${
-        data ? ' - ' + JSON.stringify(data) : ''
-      }${error ? ' - ' + JSON.stringify(error) : ''}`,
+    console.error(
+      `${new Date().toISOString()} - [ResponseError]: Status: ${statusCode}, Message: ${message}, Errors: ${
+        errorDetails ? JSON.stringify(errorDetails) : 'None'
+      }`,
     );
   }
 }
 
-export class ResponseSuccess<T> implements ResponseInterface<T> {
-  message: string;
-  data: T | T[];
-  error_message: null;
-  error: null;
-  totalRecords: number;
+export class ResponseSuccess<T> implements IApiResponse<T> {
   success: boolean;
+  statusCode: number;
+  message?: string;
+  data: T | T[];
+  metadata?: {
+    totalRecords?: number;
+    page?: number;
+    limit?: number;
+    totalPages?: number;
+  };
+  errors?: Array<{
+    field?: string;
+    code?: string;
+    message: string;
+  }>;
 
-  constructor(infoMessage: string, data: T, notLog = false) {
+  constructor(
+    statusCode: number,
+    message: string,
+    data: T | T[],
+    metadata?: {
+      totalRecords?: number;
+      page?: number;
+      limit?: number;
+      totalPages?: number;
+    },
+    logData: boolean = true,
+  ) {
     this.success = true;
-    this.message = infoMessage;
+    this.statusCode = statusCode;
+    this.message = message;
     this.data = data;
-    this.error_message = null;
-    this.error = null;
-    this.totalRecords = Array.isArray(data) ? data.length : 1;
+    this.metadata = metadata;
 
-    if (!notLog) {
+    if (logData) {
       try {
         const obfuscatedData = JSON.parse(JSON.stringify(data));
-        if (obfuscatedData && obfuscatedData.token) {
+        if (Array.isArray(obfuscatedData)) {
+          obfuscatedData.forEach((item) => {
+            if (item.token) item.token = '*******';
+          });
+        } else if (obfuscatedData.token) {
           obfuscatedData.token = '*******';
         }
         console.log(
-          `${new Date().toISOString()} - [ResponseSuccess]: ${infoMessage} - ${JSON.stringify(
+          `${new Date().toISOString()} - [ResponseSuccess]: Status: ${statusCode}, Message: ${message}, Data: ${JSON.stringify(
             obfuscatedData,
           )}`,
         );

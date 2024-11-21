@@ -6,8 +6,10 @@ import {
   getPaginationParams,
   PaginationParams,
 } from '@/shared/utils/pagination.util';
+import { IAnalyticsService } from '@/shared/interfaces/analytics.interface';
+import { AnalyticsEvent } from './entities/analytics.entity';
 @Injectable()
-export class AnalyticsService {
+export class AnalyticsService implements IAnalyticsService {
   constructor(private db: DatabaseService) {}
 
   async getArticleAnalytics(articleId: string, params: PaginationParams) {
@@ -18,7 +20,7 @@ export class AnalyticsService {
       },
       orderBy,
     };
-    const paginatedArticles = await getPaginatedData(
+    const paginatedArticles = await getPaginatedData<AnalyticsEvent>(
       this.db,
       'analyticsEvent',
       query,
@@ -37,7 +39,7 @@ export class AnalyticsService {
       },
       orderBy,
     };
-    const paginatedArticles = await getPaginatedData(
+    const paginatedArticles = await getPaginatedData<AnalyticsEvent>(
       this.db,
       'analyticsEvent',
       query,
@@ -50,7 +52,7 @@ export class AnalyticsService {
 
   // User Engagement
   async getUserVisits(startDate: Date, endDate: Date) {
-    return this.db.pageView.groupBy({
+    return await this.db.pageView.groupBy({
       by: ['userId'],
       where: {
         createdAt: {
@@ -65,7 +67,7 @@ export class AnalyticsService {
   }
 
   async getUserLocations() {
-    return this.db.session.groupBy({
+    return await this.db.session.groupBy({
       by: ['location'],
       _count: {
         id: true,
@@ -74,7 +76,7 @@ export class AnalyticsService {
   }
 
   async getSessionDuration() {
-    return this.db.session.aggregate({
+    return await this.db.session.aggregate({
       _avg: {
         duration: true,
       },
@@ -82,7 +84,7 @@ export class AnalyticsService {
   }
 
   async getDeviceInfo() {
-    return this.db.session.groupBy({
+    return await this.db.session.groupBy({
       by: ['deviceType'],
       _count: {
         id: true,
@@ -92,7 +94,7 @@ export class AnalyticsService {
 
   // Content Performance
   async getPopularPosts() {
-    return this.db.article.findMany({
+    return await this.db.article.findMany({
       select: {
         id: true,
         title: true,
@@ -118,7 +120,7 @@ export class AnalyticsService {
   }
 
   async getPostEngagement(articleId: string) {
-    return this.db.article.findUnique({
+    return await this.db.article.findUnique({
       where: { id: articleId },
       include: {
         _count: {
@@ -170,7 +172,7 @@ export class AnalyticsService {
 
   // Traffic Sources
   async getTrafficSources() {
-    return this.db.pageView.groupBy({
+    return await this.db.pageView.groupBy({
       by: ['source'],
       _count: {
         id: true,
@@ -179,7 +181,7 @@ export class AnalyticsService {
   }
 
   async getReferrals() {
-    return this.db.pageView.groupBy({
+    return await this.db.pageView.groupBy({
       by: ['referrer'],
       _count: {
         id: true,
@@ -189,7 +191,7 @@ export class AnalyticsService {
 
   // Session Tracking
   async startSession(userId: string, deviceInfo: any) {
-    return this.db.session.create({
+    return await this.db.session.create({
       data: {
         user: {
           connect: { id: userId }, // Use `connect` if `userId` is a relation
@@ -206,7 +208,7 @@ export class AnalyticsService {
       where: { id: sessionId },
     });
 
-    return this.db.session.update({
+    return await this.db.session.update({
       where: { id: sessionId },
       data: {
         endTime: new Date(),
@@ -219,7 +221,7 @@ export class AnalyticsService {
   async getActiveUsers() {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
-    return this.db.session.count({
+    return await this.db.session.count({
       where: {
         OR: [{ endTime: null }, { endTime: { gte: fiveMinutesAgo } }],
       },
@@ -228,14 +230,14 @@ export class AnalyticsService {
 
   // Admin Utilities
   async logEvent(data: CreateAnalyticsEventDto) {
-    return this.db.analyticsEvent.create({
+    return await this.db.analyticsEvent.create({
       data,
     });
   }
 
   async clearAnalyticsData(userId: string) {
     // Start a transaction to ensure data consistency
-    return this.db.$transaction([
+    return await this.db.$transaction([
       this.db.pageView.deleteMany({
         where: { userId },
       }),

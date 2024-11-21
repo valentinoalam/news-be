@@ -4,14 +4,15 @@ import { UpdateTagDto } from './dto/update-tag.dto';
 import { Tag } from './entities/tag.entity';
 import { DatabaseService } from '@/core/database/database.service';
 import { ResponseSuccess, ResponseError } from '@/common/response/response';
+import { ITagService } from '@/shared/interfaces/tag.interface';
 
 @Injectable()
-export class TagService {
+export class TagService implements ITagService {
   constructor(private prisma: DatabaseService) {}
 
   // Create a new tag
   async createTag(data: CreateTagDto): Promise<Tag> {
-    return this.prisma.tag.create({
+    return await this.prisma.tag.create({
       data,
     });
   }

@@ -20,7 +20,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { Tag } from './entities/tag.entity';
-import { ResponseInterface } from '@/common/response/response.interface';
+import { IApiResponse } from '@/common/response/response.interface';
 
 @ApiTags('Tags')
 @Controller('tags')
@@ -48,7 +48,7 @@ export class TagController {
     type: Tag,
   })
   @ApiResponse({ status: 404, description: 'Tag not found' })
-  async findOne(@Param('id') id: string): Promise<ResponseInterface<Tag>> {
+  async findOne(@Param('id') id: string): Promise<IApiResponse<Tag>> {
     return this.tagService.findTagById(id);
   }
 
@@ -59,7 +59,7 @@ export class TagController {
     description: 'Tags retrieved successfully',
     type: [Tag],
   })
-  async findAll(): Promise<ResponseInterface<Tag[]>> {
+  async findAll(): Promise<IApiResponse<Tag[]>> {
     return this.tagService.findAllTags();
   }
 

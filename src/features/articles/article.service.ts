@@ -6,19 +6,19 @@ import { DatabaseService } from 'src/core/database/database.service';
 import {
   getPaginatedData,
   getPaginationParams,
-  PaginationParams,
+  PaginatedResponse,
 } from '@/shared/utils/pagination.util';
 import { MediaService } from '../media/media.service';
 import { CreateMediaItemDto } from '../media/dto/create-media.dto';
 import { Prisma } from '@prisma/client';
-
-interface ArticleQueryParams extends PaginationParams {
-  status: string;
-  authorId: string;
-}
+import {
+  ArticleQueryParams,
+  IArticleService,
+} from '@/shared/interfaces/article.interface';
+import { Article } from './entities/article.entity';
 
 @Injectable()
-export class ArticleService {
+export class ArticleService implements IArticleService {
   constructor(
     private media: MediaService,
     private db: DatabaseService,
@@ -27,12 +27,7 @@ export class ArticleService {
   // Create new article with optional media upload handling
   async create(data: CreateArticleDto, authorId: string) {
     const { categoryId, mediaFiles, imageIds, ...rest } = data;
-    const dataOut = {
-      status: false,
-      message: '',
-      data: null,
-      logs: {},
-    };
+
     // Validate that all referenced images exist
     if (imageIds?.length) {
       const images = await this.db.mediaItem.findMany({
@@ -47,6 +42,7 @@ export class ArticleService {
         throw new NotFoundException('Some referenced images were not found');
       }
     }
+
     try {
       // Create the article in the database
       const article = await this.db.article.create({
@@ -75,6 +71,8 @@ export class ArticleService {
           mediaItems: true,
         },
       });
+
+      // Handle media files if any
       if (mediaFiles.length) {
         const mediaItems: CreateMediaItemDto[] = mediaFiles.map((item) => ({
           file: item.file,
@@ -83,29 +81,12 @@ export class ArticleService {
           caption: item.caption || '',
           index: item.index || 0,
         }));
-        dataOut.data.mediaItems = await this.media.createMany(
-          article.id,
-          mediaItems,
-        );
+        await this.media.createMany(article.id, mediaItems);
       }
-      dataOut.status = true;
-      dataOut.message = 'Article created successfully';
-      dataOut.data.article = article;
-      dataOut.logs = {
-        timestamp: new Date().toISOString(),
-        action: 'createArticle',
-        authorId,
-      };
-      return dataOut;
+
+      return article; // Return the created article for response handling in controller
     } catch (error) {
-      dataOut.message = 'Failed to create article';
-      dataOut.logs = {
-        error: error.message,
-        timestamp: new Date().toISOString(),
-        action: 'createArticle',
-        authorId,
-      };
-      return dataOut;
+      throw new Error('Failed to create article: ' + error.message); // Throw error to be handled by controller
     }
   }
 
@@ -224,14 +205,15 @@ export class ArticleService {
       },
       orderBy,
     };
-    const paginatedArticles = await getPaginatedData(
-      this.db,
-      'article',
-      query,
-      params.page,
-      limit,
-      skip,
-    );
+    const paginatedArticles: PaginatedResponse<Article> =
+      await getPaginatedData(
+        this.db,
+        'article',
+        query,
+        params.page,
+        limit,
+        skip,
+      );
     return paginatedArticles;
   }
 

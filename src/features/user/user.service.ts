@@ -4,9 +4,10 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { hash } from 'argon2';
 import { DatabaseService } from 'src/core/database/database.service';
 import { PaginationParams } from '@/shared/utils/pagination.util';
+import { IUserService } from '@/shared/interfaces/user.interface';
 
 @Injectable()
-export class UserService {
+export class UserService implements IUserService {
   constructor(private db: DatabaseService) {}
   async create(dto: CreateUserDto) {
     const data = { ...dto, provider: 'credential' };
@@ -36,16 +37,20 @@ export class UserService {
     return safeUser;
   }
 
-  async getById(id: string): Promise<any> {
+  async findOne(id: string): Promise<any> {
     // find the user by username
     const user = await this.db.user.findUnique({
       where: { id },
       include: {
         profile: true,
+        articles: true,
       },
     });
 
-    return user;
+    // Destructure to exclude sensitive fields
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...safeUser } = user;
+    return safeUser;
   }
 
   async findAll(params: PaginationParams) {
@@ -53,16 +58,6 @@ export class UserService {
     return this.db.user.findMany({
       include: {
         profile: true,
-      },
-    });
-  }
-
-  async findOne(id: string) {
-    return this.db.user.findUnique({
-      where: { id },
-      include: {
-        profile: true,
-        articles: true,
       },
     });
   }

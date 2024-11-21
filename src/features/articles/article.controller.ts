@@ -12,6 +12,7 @@ import {
   UseInterceptors,
   UploadedFiles,
   UploadedFile,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -31,6 +32,8 @@ import { Role } from '@prisma/client';
 import { PaginationParams } from '@/shared/utils/pagination.util';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CreateMediaItemDto } from '../media/dto/create-media.dto';
+import { ResponseError, ResponseSuccess } from '@/common/response/response';
+import { Article } from './entities/article.entity';
 // import { Request } from 'express';
 
 @ApiTags('articles')
@@ -70,62 +73,188 @@ export class ArticleController {
     @UploadedFiles() mediaFiles: CreateMediaItemDto[],
     @Request() req,
   ) {
-    const { user } = req;
-    const authorId = user.id ? user?.id : 'cm2u4rgrh00006034t7bjsa86';
-    createArticleDto.mediaFiles = mediaFiles;
-    return this.articleService.create(createArticleDto, authorId);
+    try {
+      const { user } = req;
+      const authorId = user.id;
+      createArticleDto.mediaFiles = mediaFiles;
+      const article = await this.articleService.create(
+        createArticleDto,
+        authorId,
+      );
+      // Success response handling
+      return new ResponseSuccess<Article>(
+        HttpStatus.CREATED,
+        'Article created successfully',
+        article,
+      );
+    } catch (error) {
+      // Error response handling
+      return new ResponseError(
+        HttpStatus.BAD_REQUEST,
+        'Failed to create article',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Get()
   @ApiOperation({ summary: 'Get all articles' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
-  findAll(
+  async findAll(
     @Query() params: PaginationParams,
     @Query('status') status?: string,
     @Query('authorId') authorId?: string,
   ) {
-    const articleQuery = { ...params, status, authorId };
-    return this.articleService.findAll(articleQuery);
+    try {
+      const articleQuery = { ...params, status, authorId };
+      const { data, meta } = await this.articleService.findAll(articleQuery);
+
+      // Return success response with paginated articles
+      return new ResponseSuccess<Article[]>(
+        HttpStatus.OK,
+        'Articles fetched successfully',
+        data,
+        meta,
+      );
+    } catch (error) {
+      // Handle errors (e.g., if the query parameters are invalid or the fetch fails)
+      return new ResponseError(
+        HttpStatus.BAD_REQUEST,
+        'Failed to fetch articles',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Get('headlines')
   @ApiOperation({ summary: 'Get all articles' })
-  getHeadlines() {
-    return this.articleService.getTopArticles();
+  async getHeadlines() {
+    try {
+      const articles = await this.articleService.getTopArticles();
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Top articles fetched successfully',
+        articles,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to fetch top articles',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get an article by id' })
-  findOne(@Param('id') id: string) {
-    return this.articleService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    try {
+      const article = await this.articleService.findOne(id);
+      if (!article) {
+        return new ResponseError(
+          HttpStatus.NOT_FOUND,
+          `Article with ID ${id} not found`,
+          [{ message: `No article found with ID ${id}` }],
+        );
+      }
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        `Article with ID ${id} fetched successfully`,
+        article,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to fetch article',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Put(':id')
   @Roles(Role.EDITOR, Role.AUTHOR)
   @ApiOperation({ summary: 'Update an article' })
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateArticleDto: UpdateArticleDto,
     @Request() req,
   ) {
-    return this.articleService.updateArticle(id, updateArticleDto, req.user.id);
+    try {
+      const updatedArticle = await this.articleService.updateArticle(
+        id,
+        updateArticleDto,
+        req.user.id,
+      );
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Article updated successfully',
+        updatedArticle,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to update article',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.articleService.remove(id);
+  @ApiOperation({ summary: 'Delete an article' })
+  async remove(@Param('id') id: string) {
+    try {
+      const deletedArticle = await this.articleService.remove(id);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Article deleted successfully',
+        deletedArticle,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to delete article',
+        [{ message: error.message }],
+      );
+    }
   }
 
-  // Content Management
   @Post(':id/publish')
+  @ApiOperation({ summary: 'Publish an article' })
   async publish(@Param('id') id: string) {
-    return this.articleService.publish(id);
+    try {
+      const publishedArticle = await this.articleService.publish(id);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Article published successfully',
+        publishedArticle,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to publish article',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Post(':id/save-draft')
+  @ApiOperation({ summary: 'Save an article as draft' })
   async saveDraft(@Param('id') id: string, @Body() data: any) {
-    return this.articleService.saveDraft(id, data);
+    try {
+      const draft = await this.articleService.saveDraft(id, data);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Article saved as draft successfully',
+        draft,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to save article as draft',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Put(':id/tags')

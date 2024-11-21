@@ -1,18 +1,25 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../../user/entities/user.entity';
-import { Category } from '../../category/entities/category.entity';
-import { Tag } from 'src/features/tags/entities/tag.entity';
-import { Comment } from '../../comment/entities/comment.entity';
-import { ArticleMetadata } from 'src/features/articles/entities/articleMetadata.entity';
-import { ArticleRevision } from 'src/features/articles/entities/articleRevision.entity';
-import { MediaItem } from 'src/features/media/entities/media.entity';
-import { AnalyticsEvent } from 'src/features/analytics/entities/analytics.entity';
+
+import { ArticleMetadata } from './articleMetadata.entity';
+import { ArticleRevision } from './articleRevision.entity';
+import { User } from '@/features/user/entities/user.entity';
+import { Category } from '@/features/category/entities/category.entity';
+import { ArticleStatus } from '@prisma/client';
+import { View } from '@/features/articles/entities/view.entity';
+import { Share } from '@/features/articles/entities/share.entity';
+import { Like } from '@/features/articles/entities/like.entity';
+import { MediaItem } from '@/features/media/entities/media.entity';
+import { AnalyticsEvent } from '@/features/analytics/entities/analytics.entity';
 
 export class Article {
   @ApiProperty({
     type: 'string',
   })
   id: string;
+  @ApiProperty({
+    type: 'string',
+  })
+  categoryId: string;
   @ApiProperty({
     type: 'string',
   })
@@ -23,22 +30,23 @@ export class Article {
   slug: string;
   @ApiProperty({
     type: 'string',
+    nullable: true,
   })
-  content: string;
+  coverImageId: string | null;
   @ApiProperty({
     type: 'string',
     nullable: true,
   })
   excerpt: string | null;
   @ApiProperty({
-    type: 'boolean',
+    type: 'string',
   })
-  published: boolean;
+  content: string;
   @ApiProperty({
     type: 'string',
     nullable: true,
   })
-  featuredImage: string | null;
+  html: string | null;
   @ApiProperty({
     type: 'string',
   })
@@ -50,27 +58,42 @@ export class Article {
   author?: User;
   @ApiProperty({
     type: () => Category,
-    isArray: true,
     required: false,
   })
-  categories?: Category[];
+  category?: Category;
   @ApiProperty({
-    type: () => Tag,
+    enum: ArticleStatus,
+  })
+  status: ArticleStatus;
+  @ApiProperty({
+    type: 'integer',
+    format: 'int32',
+  })
+  clickTimes: number;
+  @ApiProperty({
+    type: () => View,
     isArray: true,
     required: false,
   })
-  tags?: Tag[];
+  views?: View[];
+  @ApiProperty({
+    type: () => Share,
+    isArray: true,
+    required: false,
+  })
+  shares?: Share[];
+  @ApiProperty({
+    type: () => Like,
+    isArray: true,
+    required: false,
+  })
+  likes?: Like[];
   @ApiProperty({
     type: () => Comment,
     isArray: true,
     required: false,
   })
   comments?: Comment[];
-  @ApiProperty({
-    type: 'integer',
-    format: 'int32',
-  })
-  viewCount: number;
   @ApiProperty({
     type: 'string',
     format: 'date-time',
@@ -79,8 +102,9 @@ export class Article {
   @ApiProperty({
     type: 'string',
     format: 'date-time',
+    nullable: true,
   })
-  updatedAt: Date;
+  updatedAt: Date | null;
   @ApiProperty({
     type: 'string',
     format: 'date-time',
@@ -92,11 +116,6 @@ export class Article {
     nullable: true,
   })
   updatedById: string | null;
-  @ApiProperty({
-    type: 'string',
-    nullable: true,
-  })
-  publishedById: string | null;
   @ApiProperty({
     type: () => ArticleMetadata,
     required: false,

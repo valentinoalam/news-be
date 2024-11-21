@@ -20,11 +20,12 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { Comment } from './entities/comment.entity';
-import { ResponseInterface } from '@/common/response/response.interface';
+import { ICommentController } from '@/shared/interfaces/comment.interface';
+import { ResponseError, ResponseSuccess } from '@/common/response/response';
 
 @ApiTags('Comments')
 @Controller('comment')
-export class CommentController {
+export class CommentController implements ICommentController {
   constructor(private readonly commentService: CommentService) {}
   // Create a new comment or reply
   @Post()
@@ -35,8 +36,21 @@ export class CommentController {
     description: 'Comment has been successfully created.',
   })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async create(@Body() data: CreateCommentDto): Promise<Comment> {
-    return this.commentService.createComment(data);
+  async create(@Body() data: CreateCommentDto) {
+    try {
+      const comment = await this.commentService.createComment(data);
+      return new ResponseSuccess<Comment>(
+        HttpStatus.CREATED, // HTTP 201
+        'Comment created successfully',
+        comment,
+      );
+    } catch (error) {
+      return new ResponseError<Comment>(
+        HttpStatus.BAD_REQUEST, // HTTP 400
+        'Failed to create comment',
+        [{ message: error.message }], // Error details
+      );
+    }
   }
 
   // Get a specific comment by ID, with nested replies
@@ -49,8 +63,28 @@ export class CommentController {
     type: Comment,
   })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  async findOne(@Param('id') id: string): Promise<Comment> {
-    return await this.commentService.findCommentById(id);
+  async findOne(@Param('id') id: string) {
+    try {
+      const comment = await this.commentService.findCommentById(id);
+      if (!comment) {
+        return new ResponseError<Comment>(
+          HttpStatus.NOT_FOUND, // HTTP 404
+          'Comment not found',
+          [{ message: `Comment with id ${id} does not exist` }], // Error details
+        );
+      }
+      return new ResponseSuccess<Comment>(
+        HttpStatus.OK, // HTTP 200
+        'Comment retrieved successfully',
+        comment,
+      );
+    } catch (error) {
+      return new ResponseError<Comment>(
+        HttpStatus.INTERNAL_SERVER_ERROR, // HTTP 500
+        'Failed to retrieve comment',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // Get all top-level comments for a specific article, including nested replies
@@ -64,10 +98,29 @@ export class CommentController {
     description: 'Comments retrieved successfully',
     type: [Comment],
   })
-  async findByArticle(
-    @Param('articleId') articleId: string,
-  ): Promise<ResponseInterface<Comment[]>> {
-    return await this.commentService.findCommentsByArticle(articleId);
+  async findByArticle(@Param('articleId') articleId: string) {
+    try {
+      const comments =
+        await this.commentService.findCommentsByArticle(articleId);
+      if (comments.length === 0) {
+        return new ResponseError<Comment[]>(
+          HttpStatus.NOT_FOUND, // HTTP 404
+          'Comments not found',
+          [{ message: `Theres no comments in this article` }],
+        );
+      }
+      return new ResponseSuccess<Comment[]>(
+        HttpStatus.OK, // HTTP 200
+        'Comments retrieved successfully',
+        comments,
+      );
+    } catch (error) {
+      return new ResponseError<Comment[]>(
+        HttpStatus.INTERNAL_SERVER_ERROR, // HTTP 500
+        'Failed to retrieve comments',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // Update a comment
@@ -80,11 +133,28 @@ export class CommentController {
     description: 'Comment has been successfully updated.',
   })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  async update(
-    @Param('id') id: string,
-    @Body() data: UpdateCommentDto,
-  ): Promise<Comment> {
-    return await this.commentService.updateComment(id, data);
+  async update(@Param('id') id: string, @Body() data: UpdateCommentDto) {
+    try {
+      const comment = await this.commentService.updateComment(id, data);
+      if (!comment) {
+        return new ResponseError<Comment>(
+          HttpStatus.NOT_FOUND, // HTTP 404
+          'Comment not found',
+          [{ message: `Comment with id ${id} does not exist` }],
+        );
+      }
+      return new ResponseSuccess<Comment>(
+        HttpStatus.OK, // HTTP 200
+        'Comment updated successfully',
+        comment,
+      );
+    } catch (error) {
+      return new ResponseError<Comment>(
+        HttpStatus.INTERNAL_SERVER_ERROR, // HTTP 500
+        'Failed to update comment',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // Delete a comment by ID
@@ -97,7 +167,27 @@ export class CommentController {
     description: 'Comment has been successfully deleted.',
   })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  async remove(@Param('id') id: string): Promise<void> {
-    await await this.commentService.deleteComment(id);
+  async remove(@Param('id') id: string) {
+    try {
+      const deletedComment = await this.commentService.deleteComment(id);
+      if (!deletedComment) {
+        return new ResponseError<Comment>(
+          HttpStatus.NOT_FOUND, // HTTP 404
+          'Comment not found',
+          [{ message: `Comment with id ${id} does not exist` }],
+        );
+      }
+      return new ResponseSuccess<Comment>(
+        HttpStatus.OK, // HTTP 200
+        'Comment deleted successfully',
+        deletedComment,
+      );
+    } catch (error) {
+      return new ResponseError<Comment>(
+        HttpStatus.INTERNAL_SERVER_ERROR, // HTTP 500
+        'Failed to delete comment',
+        [{ message: error.message }],
+      );
+    }
   }
 }

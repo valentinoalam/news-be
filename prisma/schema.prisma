@@ -7,7 +7,28 @@
 generator client {
   provider = "prisma-client-js"
 }
-
+generator nestjsDto {
+  provider                        = "prisma-generator-nestjs-dto"
+  output                          = "./generated/dto"
+  outputToNestJsResourceStructure = "true"
+  flatResourceStructure           = "false"
+  exportRelationModifierClasses   = "true"
+  reExport                        = "true"
+  generateFileTypes               = "all"
+  createDtoPrefix                 = "Create"
+  updateDtoPrefix                 = "Update"
+  dtoSuffix                       = "Dto"
+  entityPrefix                    = ""
+  entitySuffix                    = ""
+  classValidation                 = "true"
+  fileNamingStyle                 = "camel"
+  noDependencies                  = "false"
+  outputType                      = "class"
+  definiteAssignmentAssertion     = "false"
+  requiredResponseApiProperty     = "true"
+  prettier                        = "true"
+  outputApiPropertyType           = "true"
+}
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
@@ -227,17 +248,18 @@ model Comment {
 
 model MediaItem {
   id          String    @id @default(uuid())
-  articleId   String    @db.Char(36)
-  index       Int
+  sessionId   String?    @db.Char(36)
+  articleId   String?    @db.Char(36)
+  index       Int?
   fileName    String
   fileSize    Int
   mimeType    String
   url         String
   alt         String?
   caption     String?   @db.Text
-  article     Article   @relation(fields: [articleId], references: [id])
+  articles    Article?   @relation(fields: [articleId], references: [id])
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  updatedAt   DateTime?  @updatedAt
 
   @@map("media_items")
 }
@@ -251,10 +273,11 @@ model NewsletterSubscription {
   categories  Category[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
+  verified    Boolean @default(false)
+  verificationToken String? @unique
+  verificationTokenExpiresAt DateTime?
   @@map("newsletter_subscriptions")
 }
-
 
 enum Role {
   ADMIN
@@ -265,6 +288,7 @@ enum Role {
 
 enum SubscriptionStatus {
   ACTIVE
+  INACTIVE
   PENDING
   UNSUBSCRIBED
 }

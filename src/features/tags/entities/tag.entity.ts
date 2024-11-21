@@ -11,10 +11,6 @@ export class Tag {
   })
   name: string;
   @ApiProperty({
-    type: 'string',
-  })
-  slug: string;
-  @ApiProperty({
     type: () => Article,
     isArray: true,
     required: false,
@@ -29,5 +25,5 @@ export class Tag {
     type: 'string',
     format: 'date-time',
   })
-  updatedAt: Date;
+  updatedAt?: Date;
 }
