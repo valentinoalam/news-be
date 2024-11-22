@@ -29,12 +29,6 @@ import { PaginationParams } from '@/shared/utils/pagination.util';
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
-  @Post('events')
-  @ApiOperation({ summary: 'Track an analytics event' })
-  trackEvent(@Body() createAnalyticsEventDto: CreateAnalyticsEventDto) {
-    return this.analyticsService.trackEvent(createAnalyticsEventDto);
-  }
-
   @Get('articles/:articleId')
   @Roles(Role.ADMIN, Role.EDITOR)
   @ApiOperation({ summary: 'Get analytics for an article' })
@@ -128,7 +122,7 @@ export class AnalyticsController {
 
   // Admin Utilities endpoints
   @Post('events/log')
-  async logEvent(@Body() eventData: any) {
+  async logEvent(@Body() eventData: CreateAnalyticsEventDto) {
     return this.analyticsService.logEvent(eventData);
   }
 

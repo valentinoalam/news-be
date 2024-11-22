@@ -1,10 +1,8 @@
 import { AnalyticsEvent } from '@/features/analytics/entities/analytics.entity';
-import {
-  PaginatedResponse,
-  PaginationParams,
-} from './../../../dist/shared/utils/pagination.utils.d';
+
 import { CreateAnalyticsEventDto } from '@/features/analytics/dto/create-analytics.dto';
 import { Session } from '@prisma/client';
+import { PaginatedResponse, PaginationParams } from '../utils/pagination.util';
 export interface IAnalyticsService {
   getArticleAnalytics(
     articleId: string,

@@ -7,7 +7,7 @@ import { CreateNewsletterSubscriptionDto } from './dto/create-newsletter.dto';
 // import { UpdateNewsletterSubscriptionDto } from './dto/update-newsletter.dto';
 import { DatabaseService } from 'src/core/database/database.service';
 import { Prisma } from '@prisma/client';
-import { MailerService } from '../../shared/utils/mailer/mailer.service';
+import { MailerService } from '../../shared/mailer/mailer.service';
 import { INewsletterService } from '../../shared/interfaces/newsletter.interface';
 
 @Injectable()

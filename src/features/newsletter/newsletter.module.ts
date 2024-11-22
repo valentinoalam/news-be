@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { NewsletterService } from './newsletter.service';
 import { NewsletterController } from './newsletter.controller';
 import { DatabaseModule } from '@/core/database/database.module';
-import { MailerService } from '../../shared/utils/mailer/mailer.service';
+import { MailerService } from '../../shared/mailer/mailer.service';
 
 @Module({
   imports: [DatabaseModule],

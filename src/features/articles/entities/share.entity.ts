@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Article } from '../../article/entities/article.entity';
+import { Article } from './article.entity';
 
 export class Share {
   @ApiProperty({

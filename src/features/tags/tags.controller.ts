@@ -6,7 +6,6 @@ import {
   Patch,
   Param,
   Delete,
-  HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { TagService } from './tags.service';
@@ -20,11 +19,12 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { Tag } from './entities/tag.entity';
-import { IApiResponse } from '@/common/response/response.interface';
+import { ITagController } from '@/shared/interfaces/tag.interface';
+import { ResponseError, ResponseSuccess } from '@/common/response/response';
 
 @ApiTags('Tags')
 @Controller('tags')
-export class TagController {
+export class TagController implements ITagController {
   constructor(private readonly tagService: TagService) {}
 
   @Post()
@@ -35,8 +35,22 @@ export class TagController {
     description: 'The tag has been successfully created.',
   })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async create(@Body() data: CreateTagDto): Promise<Tag> {
-    return this.tagService.createTag(data);
+  async create(@Body() data: CreateTagDto) {
+    try {
+      const tag = await this.tagService.createTag(data);
+
+      return new ResponseSuccess(
+        HttpStatus.CREATED,
+        'Tag retrieved successfully',
+        tag,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.BAD_REQUEST,
+        'Failed to create tags',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Get(':id')
@@ -48,8 +62,28 @@ export class TagController {
     type: Tag,
   })
   @ApiResponse({ status: 404, description: 'Tag not found' })
-  async findOne(@Param('id') id: string): Promise<IApiResponse<Tag>> {
-    return this.tagService.findTagById(id);
+  async findOne(@Param('id') id: string) {
+    try {
+      const tag = await this.tagService.findTagById(id);
+      if (!tag) {
+        return new ResponseError(
+          HttpStatus.NOT_FOUND,
+          `Tag with ID ${id} not found`,
+          [{ message: `No tag found with ID ${id}` }],
+        );
+      }
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Tag retrieved successfully',
+        tag,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to retrieve tag',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Get()
@@ -59,8 +93,21 @@ export class TagController {
     description: 'Tags retrieved successfully',
     type: [Tag],
   })
-  async findAll(): Promise<IApiResponse<Tag[]>> {
-    return this.tagService.findAllTags();
+  async findAll() {
+    try {
+      const tags = await this.tagService.findAllTags();
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Tags retrieved successfully',
+        tags,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to retrieve tags',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Patch(':id')
@@ -72,15 +119,31 @@ export class TagController {
     description: 'The tag has been successfully updated.',
   })
   @ApiResponse({ status: 404, description: 'Tag not found' })
-  async update(
-    @Param('id') id: string,
-    @Body() data: UpdateTagDto,
-  ): Promise<Tag> {
-    return this.tagService.updateTag(id, data);
+  async update(@Param('id') id: string, @Body() data: UpdateTagDto) {
+    try {
+      const updatedTag = await this.tagService.updateTag(id, data);
+      if (!updatedTag) {
+        return new ResponseError(
+          HttpStatus.NOT_FOUND,
+          `Tag with ID ${id} not found`,
+          [{ message: `No tag found with ID ${id}` }],
+        );
+      }
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Tag updated successfully',
+        updatedTag,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to update tag',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete a tag by ID' })
   @ApiParam({ name: 'id', description: 'ID of the tag to delete' })
   @ApiResponse({
@@ -88,7 +151,27 @@ export class TagController {
     description: 'The tag has been successfully deleted.',
   })
   @ApiResponse({ status: 404, description: 'Tag not found' })
-  async remove(@Param('id') id: string): Promise<void> {
-    await this.tagService.deleteTag(id);
+  async remove(@Param('id') id: string) {
+    try {
+      const result = await this.tagService.deleteTag(id);
+      if (!result) {
+        return new ResponseError(
+          HttpStatus.NOT_FOUND,
+          `Tag with ID ${id} not found`,
+          [{ message: `No tag found with ID ${id}` }],
+        );
+      }
+      return new ResponseSuccess(
+        HttpStatus.NO_CONTENT,
+        'Tag deleted successfully',
+        null,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to delete tag',
+        [{ message: error.message }],
+      );
+    }
   }
 }

@@ -10,7 +10,7 @@ import { Share } from '@/features/articles/entities/share.entity';
 import { Like } from '@/features/articles/entities/like.entity';
 import { MediaItem } from '@/features/media/entities/media.entity';
 import { AnalyticsEvent } from '@/features/analytics/entities/analytics.entity';
-
+import { Comment } from '@/features/comment/entities/comment.entity';
 export class Article {
   @ApiProperty({
     type: 'string',
