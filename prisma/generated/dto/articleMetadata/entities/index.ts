@@ -1,1 +1,0 @@
-export * from './articleMetadata.entity';
