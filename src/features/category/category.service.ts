@@ -44,14 +44,19 @@ export class CategoryService implements ICategoryService {
   }
 
   // Update a category
-  async updateCategory(id: string, data: UpdateCategoryDto): Promise<Category> {
-    const { parentId, ...rest } = data;
+  async updateCategory(id: string, dto: UpdateCategoryDto): Promise<Category> {
+    const { parentId, ...rest } = dto;
+    const parent = parentId
+      ? parentId === ' '
+        ? { disconnect: true }
+        : { connect: { id: parentId } }
+      : undefined;
 
     return await this.prisma.category.update({
       where: { id },
       data: {
         ...rest,
-        parent: parentId ? { connect: { id: parentId } } : { disconnect: true },
+        parent,
       },
       include: {
         parent: true,
