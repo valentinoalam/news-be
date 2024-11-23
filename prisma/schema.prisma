@@ -186,19 +186,22 @@ model ArticleMetadata {
 }
 
 model Category {
-  id          String    @id @default(uuid())
-  name        String    @unique
-  slug        String    @unique
-  description String?   @db.Text
-  articles    Article[]
-  parentId    String?   @db.Char(36)
-  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children    Category[] @relation("CategoryHierarchy")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime?  @updatedAt
-  newsletterSubscription NewsletterSubscription[]
+  id                      String                   @id @default(uuid())
+  name                    String                   @unique
+  slug                    String                   @unique
+  description             String?                  @db.Text
+  articles                Article[]
+  parentId                String?                  @db.Char(36)
+  parent                  Category?                @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children                Category[]               @relation("CategoryHierarchy")
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime?                @updatedAt
+  newsletterSubscription  NewsletterSubscription[]
+
   @@map("categories")
+  @@index([parentId])
 }
+
 
 model Tag {
   id          String    @id @default(uuid())

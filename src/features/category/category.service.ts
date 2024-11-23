@@ -10,9 +10,14 @@ export class CategoryService implements ICategoryService {
   constructor(private prisma: DatabaseService) {}
 
   // Create a new category, with optional parent ID for nested category
-  async createCategory(data: CreateCategoryDto): Promise<Category> {
+  async createCategory(dto: CreateCategoryDto): Promise<Category> {
+    const { parentId, ...rest } = dto;
+
     return this.prisma.category.create({
-      data,
+      data: {
+        ...rest,
+        parent: parentId ? { connect: { id: parentId } } : undefined,
+      },
     });
   }
 
@@ -27,9 +32,14 @@ export class CategoryService implements ICategoryService {
   // Find all categories with nested children
   async findAllCategories(): Promise<Category[]> {
     return await this.prisma.category.findMany({
-      where: { parentId: null },
+      // where: { parentId: null },
       include: {
-        children: true,
+        parent: true,
+        children: {
+          include: {
+            children: true, // Adjust depth as needed for recursive inclusion
+          },
+        },
         _count: {
           select: {
             articles: true,
