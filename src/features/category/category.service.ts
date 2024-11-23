@@ -32,7 +32,7 @@ export class CategoryService implements ICategoryService {
   // Find all categories with nested children
   async findAllCategories(): Promise<Category[]> {
     return await this.prisma.category.findMany({
-      // where: { parentId: null },
+      where: { parentId: null },
       include: {
         parent: true,
         children: {
