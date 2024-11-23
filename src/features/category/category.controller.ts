@@ -138,7 +138,7 @@ export class CategoryController implements ICategoryController {
 
       return new ResponseSuccess<Category>(
         HttpStatus.CREATED,
-        'Category created successfully',
+        'Category updated successfully',
         category,
       );
     } catch (error) {

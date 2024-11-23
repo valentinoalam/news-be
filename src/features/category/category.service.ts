@@ -11,13 +11,8 @@ export class CategoryService implements ICategoryService {
 
   // Create a new category, with optional parent ID for nested category
   async createCategory(dto: CreateCategoryDto): Promise<Category> {
-    const { parentId, ...rest } = dto;
-
     return this.prisma.category.create({
-      data: {
-        ...rest,
-        parent: parentId ? { connect: { id: parentId } } : undefined,
-      },
+      data: dto,
     });
   }
 
@@ -34,10 +29,9 @@ export class CategoryService implements ICategoryService {
     return await this.prisma.category.findMany({
       where: { parentId: null },
       include: {
-        parent: true,
         children: {
           include: {
-            children: true, // Adjust depth as needed for recursive inclusion
+            children: true,
           },
         },
         _count: {
@@ -58,6 +52,10 @@ export class CategoryService implements ICategoryService {
       data: {
         ...rest,
         parent: parentId ? { connect: { id: parentId } } : { disconnect: true },
+      },
+      include: {
+        parent: true,
+        children: true,
       },
     });
   }
