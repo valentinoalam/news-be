@@ -14,7 +14,6 @@ import {
 } from 'nest-winston';
 import * as winston from 'winston';
 import { DatabaseModule } from '../core/database/database.module';
-import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthModule } from './health/health.module';
 import { ConfigValidator } from '@/core/config/validator/config.validator';
@@ -79,7 +78,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     }),
   ],
 
-  controllers: [AppController],
+  controllers: [],
   providers: [
     AppService,
     /*ConfigValidator*/

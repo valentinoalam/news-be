@@ -36,18 +36,12 @@ export const multerOptions = (configService: ConfigService) => ({
     destination: (req: any, file: any, cb: any) => {
       const sessionId = req.body.sessionId;
       let uploadPath: string;
-
-      if (sessionId) {
-        // Custom path based on sessionId
-        uploadPath = path.resolve(process.cwd(), 'temp', sessionId);
-      } else {
-        // Default path from config
-        uploadPath = path.resolve(
-          process.cwd(),
-          '.',
-          configService.get('app.mediaPath'),
-        );
-      }
+      uploadPath = path.resolve(
+        process.cwd(),
+        '.',
+        configService.get('app.mediaPath'),
+      );
+      if (sessionId) uploadPath = path.resolve(uploadPath, 'temp', sessionId);
 
       // Create folder if it doesn't exist
       if (!existsSync(uploadPath)) {
