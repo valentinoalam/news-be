@@ -61,10 +61,8 @@ export class MediaController {
     @UploadedFile() file: Express.Multer.File,
     @Body('sessionId') sessionId: string,
   ) {
-    console.log(file);
     try {
       const tempMedia = await this.mediaService.uploadTemp(file, sessionId);
-      console.log(tempMedia);
       return new ResponseSuccess<MediaItem>(
         HttpStatus.CREATED,
         'Temporary image successfully uploaded',

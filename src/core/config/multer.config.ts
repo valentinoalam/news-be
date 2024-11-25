@@ -34,7 +34,8 @@ export const multerOptions = (configService: ConfigService) => ({
   storage: diskStorage({
     // Destination storage path details
     destination: (req: any, file: any, cb: any) => {
-      const sessionId = req.query.sessionId;
+      console.log(req);
+      const sessionId = req.body.formData.sessionId;
       const baseUploadPath = path.resolve(
         process.cwd(),
         '.',
