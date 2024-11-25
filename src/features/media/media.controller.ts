@@ -7,7 +7,13 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBody,
+  ApiBearerAuth,
+  ApiResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { MediaService } from './media.service';
 import { RoleGuard } from 'src/common/guards';
 import { Roles } from 'src/common/decorators/roles.decorator';
@@ -32,6 +38,23 @@ export class MediaController {
 
   @Post('temp')
   @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ summary: 'Upload a temporary file' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+        sessionId: {
+          type: 'string',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'File uploaded successfully' })
   uploadTemp(
     @UploadedFile() file: Express.Multer.File,
     @Body('sessionId') sessionId: string,
@@ -40,6 +63,21 @@ export class MediaController {
   }
 
   @Post('make-permanent')
+  @ApiOperation({ summary: 'Make a temporary file permanent' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        sessionId: {
+          type: 'string',
+        },
+        articleId: {
+          type: 'string',
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'File made permanent successfully' })
   makePermanent(
     @Body('sessionId') sessionId: string,
     @Body('articleId') articleId: string,
