@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  HttpStatus,
   Post,
   UploadedFile,
   UseGuards,
@@ -19,6 +20,8 @@ import { RoleGuard } from 'src/common/guards';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ResponseError, ResponseSuccess } from '@/common/response/response';
+import { MediaItem } from './entities/media.entity';
 // import { CreateMediaItemDto } from './dto/create-media.dto';
 // import { UpdateMediaItemDto } from './dto/update-media.dto';
 
@@ -55,11 +58,25 @@ export class MediaController {
     },
   })
   @ApiResponse({ status: 201, description: 'File uploaded successfully' })
-  uploadTemp(
+  async uploadTemp(
     @UploadedFile() file: Express.Multer.File,
     @Body('sessionId') sessionId: string,
   ) {
-    return this.mediaService.uploadTemp(file, sessionId);
+    try {
+      const tempMedia = await this.mediaService.uploadTemp(file, sessionId);
+
+      return new ResponseSuccess<MediaItem>(
+        HttpStatus.CREATED,
+        'Category created successfully',
+        tempMedia,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.BAD_REQUEST,
+        'Failed to create category',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Post('make-permanent')
