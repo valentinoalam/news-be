@@ -19,7 +19,7 @@ async function bootstrap() {
     app.enableCors({
       origin: config.get('app.frontendUrl'),
       methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'sessionId'],
       credentials: true,
     });
   }

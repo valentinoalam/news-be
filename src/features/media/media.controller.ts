@@ -4,6 +4,7 @@ import {
   Get,
   HttpStatus,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -61,7 +62,7 @@ export class MediaController {
   @ApiResponse({ status: 201, description: 'File uploaded successfully' })
   async uploadTemp(
     @UploadedFile() file: Express.Multer.File,
-    @Body('sessionId') sessionId: string,
+    @Query('sessionId') sessionId: string,
   ) {
     try {
       const tempMedia = await this.mediaService.uploadTemp(file, sessionId);

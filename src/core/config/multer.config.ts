@@ -2,7 +2,6 @@ import { existsSync, mkdirSync } from 'fs';
 import { extname } from 'path';
 
 import { HttpException, HttpStatus } from '@nestjs/common';
-import { Request } from 'express';
 import { diskStorage } from 'multer';
 import { v4 as uuid } from 'uuid';
 import * as path from 'path';
@@ -33,10 +32,9 @@ export const multerOptions = (configService: ConfigService) => ({
   // Storage properties
   storage: diskStorage({
     // Destination storage path details
-    destination: (req: Request, file: any, cb: any) => {
-      console.log(req.body);
-      console.log('headers', req.headers['session-id']);
-      const sessionId = req.body.sessionId;
+    destination: async (req: any, file: any, cb: any) => {
+      console.log(req);
+      const sessionId = req.query.sessionId;
       const baseUploadPath = path.resolve(
         process.cwd(),
         '.',
@@ -54,7 +52,7 @@ export const multerOptions = (configService: ConfigService) => ({
       cb(null, uploadPath);
     },
     // File modification details
-    filename: (req: Request, file: any, cb: any) => {
+    filename: (req: any, file: any, cb: any) => {
       const name = file.originalname.split('.')[0];
       const fileExtName = extname(file.originalname);
       // Calling the callback passing the random name generated with the original extension name
