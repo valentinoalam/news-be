@@ -64,7 +64,10 @@ import { CacheModule } from '@nestjs/cache-manager';
       inject: [ConfigService], // Inject ConfigService
       useFactory: (configService: ConfigService) => [
         {
-          rootPath: join(__dirname, configService.get<string>('app.mediaPath')), // Get mediaPath from ConfigService
+          rootPath: join(
+            process.cwd(),
+            configService.get<string>('app.mediaPath'),
+          ), // Get mediaPath from ConfigService
           serveRoot: '/img/', // Set the root path for serving static files
         },
       ],
