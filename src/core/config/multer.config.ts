@@ -33,16 +33,16 @@ export const multerOptions = (configService: ConfigService) => ({
   // Storage properties
   storage: diskStorage({
     // Destination storage path details
-    destination: (req: Request, file: any, cb: any) => {
-      const sessionId = req.body.sessionId;
-      console.log(req);
-      let uploadPath: string;
-      uploadPath = path.resolve(
+    destination: (req: any, file: any, cb: any) => {
+      const sessionId = req.query.sessionId;
+      const baseUploadPath = path.resolve(
         process.cwd(),
         '.',
         configService.get('app.mediaPath'),
       );
-      if (sessionId) uploadPath = path.resolve(uploadPath, 'temp', sessionId);
+      const uploadPath = sessionId
+        ? path.join(baseUploadPath, 'temp', sessionId)
+        : baseUploadPath;
 
       // Create folder if it doesn't exist
       if (!existsSync(uploadPath)) {
