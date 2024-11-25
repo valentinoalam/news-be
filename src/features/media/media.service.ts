@@ -47,9 +47,10 @@ export class MediaService implements IMediaService {
 
   // Create temp image record
   async uploadTemp(file: Express.Multer.File, sessionId: string) {
+    const url = `https://news.assalamjs.online/img/temp/${sessionId}/${file.filename}`;
     return await this.prisma.mediaItem.create({
       data: {
-        url: file.path,
+        url,
         sessionId,
         fileName: file.filename,
         fileSize: file.size,
