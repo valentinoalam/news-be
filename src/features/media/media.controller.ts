@@ -14,6 +14,7 @@ import {
   ApiBearerAuth,
   ApiResponse,
   ApiOperation,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { MediaService } from './media.service';
 import { RoleGuard } from 'src/common/guards';
@@ -41,6 +42,7 @@ export class MediaController {
 
   @Post('temp')
   @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a temporary file' })
   @ApiBody({
     schema: {
