@@ -64,7 +64,7 @@ export class MediaController {
     console.log(file);
     try {
       const tempMedia = await this.mediaService.uploadTemp(file, sessionId);
-
+      console.log(tempMedia);
       return new ResponseSuccess<MediaItem>(
         HttpStatus.CREATED,
         'Temporary image successfully uploaded',

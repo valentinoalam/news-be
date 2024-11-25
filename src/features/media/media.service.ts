@@ -45,17 +45,11 @@ export class MediaService implements IMediaService {
     });
   }
 
+  // Create temp image record
   async uploadTemp(file: Express.Multer.File, sessionId: string) {
-    const fileName = `${Date.now()}-${file.originalname}`;
-    const tempPath = `temp/${sessionId}/${fileName}`;
-
-    // Upload to storage
-    const url = await this.storageService.upload(file.buffer, tempPath);
-
-    // Create temp image record
-    const image = await this.prisma.mediaItem.create({
+    return await this.prisma.mediaItem.create({
       data: {
-        url,
+        url: file.path,
         sessionId,
         fileName: file.filename,
         fileSize: file.size,
@@ -64,8 +58,6 @@ export class MediaService implements IMediaService {
         caption: '',
       },
     });
-
-    return image;
   }
 
   async makePermanent(sessionId: string, articleId: string) {

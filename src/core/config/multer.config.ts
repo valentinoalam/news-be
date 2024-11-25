@@ -34,27 +34,34 @@ export const multerOptions = (configService: ConfigService) => ({
   storage: diskStorage({
     // Destination storage path details
     destination: (req: any, file: any, cb: any) => {
-      const uploadPath = path.resolve(
-        process.cwd(),
-        '..',
-        configService.get('app.mediaPath'),
-      );
-      // Create folder if doesn't exist
-      if (!existsSync(uploadPath)) {
-        mkdirSync(uploadPath);
+      const sessionId = req.body.sessionId;
+      let uploadPath: string;
+
+      if (sessionId) {
+        // Custom path based on sessionId
+        uploadPath = path.resolve(process.cwd(), 'temp', sessionId);
+      } else {
+        // Default path from config
+        uploadPath = path.resolve(
+          process.cwd(),
+          '.',
+          configService.get('app.mediaPath'),
+        );
       }
+
+      // Create folder if it doesn't exist
+      if (!existsSync(uploadPath)) {
+        mkdirSync(uploadPath, { recursive: true });
+      }
+
       cb(null, uploadPath);
     },
     // File modification details
     filename: (req: Request, file: any, cb: any) => {
       const name = file.originalname.split('.')[0];
       const fileExtName = extname(file.originalname);
-      const randomName = Array(4)
-        .fill(null)
-        .map(() => Math.round(Math.random() * 16).toString(16))
-        .join('');
       // Calling the callback passing the random name generated with the original extension name
-      cb(null, `${uuid(name)}-${randomName}${fileExtName}`);
+      cb(null, `${Date.now()}-${uuid(name)}${fileExtName}`);
     },
   }),
 });
