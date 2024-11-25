@@ -41,7 +41,6 @@ export class MediaController {
 
   @Post('temp')
   @UseInterceptors(FileInterceptor('file'))
-  @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({ summary: 'Upload a temporary file' })
   @ApiBody({
     schema: {
@@ -67,13 +66,13 @@ export class MediaController {
 
       return new ResponseSuccess<MediaItem>(
         HttpStatus.CREATED,
-        'Category created successfully',
+        'Temporary image successfully uploaded',
         tempMedia,
       );
     } catch (error) {
       return new ResponseError(
         HttpStatus.BAD_REQUEST,
-        'Failed to create category',
+        'Failed to upload image',
         [{ message: error.message }],
       );
     }
