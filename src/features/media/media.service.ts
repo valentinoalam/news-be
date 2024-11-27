@@ -31,6 +31,12 @@ export class MediaService implements IMediaService {
     return this.prisma.mediaItem.findMany();
   }
 
+  fromSession(sessionId: string) {
+    return this.prisma.mediaItem.findMany({
+      where: { sessionId },
+    });
+  }
+
   async attachToArticle(mediaId: string, articleId: string) {
     return this.prisma.article.update({
       where: { id: articleId },

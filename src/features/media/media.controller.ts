@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Param,
   Post,
   Query,
   UploadedFile,
@@ -36,9 +37,15 @@ export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
   @Get()
-  @Roles(Role.EDITOR, Role.AUTHOR)
+  // @Roles(Role.EDITOR, Role.AUTHOR)
   findAll() {
     return this.mediaService.findAll();
+  }
+
+  @Get(':sessionId')
+  // @Roles(Role.EDITOR, Role.AUTHOR)
+  finduploadedMedia(@Param('sessionId') sessionId: string) {
+    return this.mediaService.fromSession(sessionId);
   }
 
   @Post('temp')
