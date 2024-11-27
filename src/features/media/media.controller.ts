@@ -20,8 +20,8 @@ import {
 } from '@nestjs/swagger';
 import { MediaService } from './media.service';
 import { RoleGuard } from 'src/common/guards';
-import { Roles } from 'src/common/decorators/roles.decorator';
-import { Role } from '@prisma/client';
+// import { Roles } from 'src/common/decorators/roles.decorator';
+// import { Role } from '@prisma/client';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ResponseError, ResponseSuccess } from '@/common/response/response';
 import { MediaItem } from './entities/media.entity';
