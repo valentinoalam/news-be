@@ -105,7 +105,7 @@ export class MediaController {
   @ApiResponse({ status: 200, description: 'File made permanent successfully' })
   makePermanent(
     @Body('sessionId') sessionId: string,
-    @Body('articleId') articleId: string,
+    @Body('articleId') articleId: number,
   ) {
     return this.mediaService.makePermanent(sessionId, articleId);
   }

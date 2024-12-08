@@ -1,3 +1,4 @@
+import { IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 import { ArticleMetadata } from './articleMetadata.entity';
@@ -13,13 +14,13 @@ import { AnalyticsEvent } from '@/features/analytics/entities/analytics.entity';
 import { Comment } from '@/features/comment/entities/comment.entity';
 export class Article {
   @ApiProperty({
-    type: 'string',
+    type: 'number',
   })
-  id: string;
+  id: number;
   @ApiProperty({
     type: 'string',
   })
-  categoryId: string;
+  categoryId: number;
   @ApiProperty({
     type: 'string',
   })
@@ -121,7 +122,8 @@ export class Article {
     required: false,
     nullable: true,
   })
-  metadata?: ArticleMetadata | null;
+  @IsOptional()
+  metadata?: ArticleMetadata;
   @ApiProperty({
     type: () => ArticleRevision,
     isArray: true,

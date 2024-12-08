@@ -16,7 +16,6 @@ import {
 } from '@nestjs/common';
 import {
   ApiTags,
-  ApiBody,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
@@ -34,6 +33,7 @@ import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CreateMediaItemDto } from '../media/dto/create-media.dto';
 import { ResponseError, ResponseSuccess } from '@/common/response/response';
 import { Article } from './entities/article.entity';
+import { IArticleController } from '@/shared/interfaces/article.interface';
 // import { Request } from 'express';
 
 @ApiTags('articles')
@@ -41,7 +41,7 @@ import { Article } from './entities/article.entity';
 @UseGuards(RoleGuard)
 @ApiBearerAuth()
 @Controller('article')
-export class ArticleController {
+export class ArticleController implements IArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
   // CRUD Operations
@@ -51,36 +51,16 @@ export class ArticleController {
   @ApiResponse({ status: 201, description: 'Article created successfully' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FilesInterceptor('featuredImage', 20))
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        featuredImage: { type: 'string', format: 'binary' },
-        mediaItems: {
-          type: 'array',
-          items: { type: 'string', format: 'binary' },
-        },
-        title: { type: 'string' },
-        content: { type: 'string' },
-        categoryId: { type: 'string' },
-        tags: { type: 'array', items: { type: 'string' } },
-        // Add other fields as needed
-      },
-    },
-  })
   async create(
-    @Body() createArticleDto: CreateArticleDto,
+    @Body() dto: CreateArticleDto,
     @UploadedFiles() mediaFiles: CreateMediaItemDto[],
     @Request() req,
   ) {
     try {
       const { user } = req;
       const authorId = user.id;
-      createArticleDto.mediaFiles = mediaFiles;
-      const article = await this.articleService.create(
-        createArticleDto,
-        authorId,
-      );
+      dto.mediaFiles = mediaFiles;
+      const article = await this.articleService.create(dto, authorId);
       // Success response handling
       return new ResponseSuccess<Article>(
         HttpStatus.CREATED,
@@ -146,9 +126,32 @@ export class ArticleController {
     }
   }
 
+  @Get('headlines')
+  @ApiOperation({ summary: 'Get all articles' })
+  async getHotArticles() {
+    try {
+      const popularArticles = await this.articleService.getPopularArticles();
+
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Popular articles retrieved successfully',
+        popularArticles,
+        {
+          totalRecords: popularArticles.length,
+        },
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to retrieve popular articles',
+        [{ code: 'POPULAR_ARTICLES_ERROR', message: error.message }],
+      );
+    }
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get an article by id' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: number) {
     try {
       const article = await this.articleService.findOne(id);
       if (!article) {
@@ -176,7 +179,7 @@ export class ArticleController {
   @Roles(Role.EDITOR, Role.AUTHOR)
   @ApiOperation({ summary: 'Update an article' })
   async update(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() updateArticleDto: UpdateArticleDto,
     @Request() req,
   ) {
@@ -202,7 +205,7 @@ export class ArticleController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete an article' })
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: number) {
     try {
       const deletedArticle = await this.articleService.remove(id);
       return new ResponseSuccess(
@@ -221,7 +224,7 @@ export class ArticleController {
 
   @Post(':id/publish')
   @ApiOperation({ summary: 'Publish an article' })
-  async publish(@Param('id') id: string) {
+  async publish(@Param('id') id: number) {
     try {
       const publishedArticle = await this.articleService.publish(id);
       return new ResponseSuccess(
@@ -240,7 +243,7 @@ export class ArticleController {
 
   @Post(':id/save-draft')
   @ApiOperation({ summary: 'Save an article as draft' })
-  async saveDraft(@Param('id') id: string, @Body() data: any) {
+  async saveDraft(@Param('id') id: number, @Body() data: any) {
     try {
       const draft = await this.articleService.saveDraft(id, data);
       return new ResponseSuccess(
@@ -258,87 +261,283 @@ export class ArticleController {
   }
 
   @Put(':id/tags')
-  async updateTags(@Param('id') id: string, @Body() data: { tags: string[] }) {
-    return this.articleService.updateTags(id, data.tags);
+  async updateTags(@Param('id') id: number, @Body() tags: string[]) {
+    // return this.articleService.updateTags(id, data.tags);
+    try {
+      const result = await this.articleService.updateTags(id, tags);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Tags updated successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to update tags',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // Media and Attachments
   @Post(':id/media')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadMedia(@Param('id') id: string, @UploadedFile() file: any) {
-    return this.articleService.addMedia(id, {
-      filename: file.filename,
-      mimeType: file.mimetype,
-      url: file.path, // Assuming you're saving the file and have the URL
-    });
+  async uploadMedia(@Param('id') id: number, @UploadedFile() file: any) {
+    try {
+      const result = await this.articleService.addMedia(id, {
+        filename: file.filename,
+        mimeType: file.mimetype,
+        url: file.path,
+      });
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Media uploaded successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to upload media',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Get(':id/media')
-  async getMedia(@Param('id') id: string) {
-    return this.articleService.getMedia(id);
+  async getMedia(@Param('id') id: number) {
+    try {
+      const result = await this.articleService.getMedia(id);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Media fetched successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to fetch media',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // Comments and Interactions
   @Get(':id/comments')
-  async getComments(@Param('id') id: string) {
-    return this.articleService.getComments(id);
+  async getComments(@Param('id') id: number) {
+    try {
+      const result = await this.articleService.getComments(id);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Comments fetched successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to fetch comments',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Post(':id/comments')
-  async addComment(@Param('id') id: string, @Body() data: any) {
-    return this.articleService.addComment(id, data);
+  async addComment(@Param('id') id: number, @Body() data: any) {
+    try {
+      const result = await this.articleService.addComment(id, data);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Comment added successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to add comment',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Post(':id/like')
-  async addLike(@Param('id') id: string, @Body() data: { userId: string }) {
-    return this.articleService.addLike(id, data.userId);
+  async addLike(@Param('id') id: number, @Body() userId: string) {
+    try {
+      const result = await this.articleService.addLike(id, userId);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Like added successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to add like',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Get(':id/likes')
-  async getLikesCount(@Param('id') id: string) {
-    return this.articleService.getLikesCount(id);
+  async getLikesCount(@Param('id') id: number) {
+    try {
+      const result = await this.articleService.getLikesCount(id);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Likes count fetched successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to fetch likes count',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // SEO and Metadata
   @Get(':id/metadata')
-  async getMetadata(@Param('id') id: string) {
-    return this.articleService.getMetadata(id);
+  async getMetadata(@Param('id') id: number) {
+    try {
+      const result = await this.articleService.getMetadata(id);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Metadata fetched successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to fetch metadata',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Put(':id/metadata')
-  async updateMetadata(@Param('id') id: string, @Body() data: any) {
-    return this.articleService.updateMetadata(id, data);
+  async updateMetadata(@Param('id') id: number, @Body() data: any) {
+    try {
+      const result = await this.articleService.updateMetadata(id, data);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Metadata updated successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to update metadata',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // Analytics
   @Get(':id/views')
-  async getViews(@Param('id') id: string) {
-    return this.articleService.getViews(id);
+  async getViews(@Param('id') id: number) {
+    try {
+      const result = await this.articleService.getViews(id);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Views count fetched successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to fetch views count',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Post(':id/views')
-  async trackView(@Param('id') id: string, @Body() data?: { userId?: string }) {
-    return this.articleService.trackView(id, data?.userId);
+  async trackView(@Param('id') id: number, @Body() userId?: string) {
+    try {
+      const result = await this.articleService.trackView(id, userId);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'View tracked successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to track view',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Get(':id/engagement')
-  async getEngagementMetrics(@Param('id') id: string) {
-    return this.articleService.getEngagementMetrics(id);
+  async getEngagementMetrics(@Param('id') id: number) {
+    try {
+      const result = await this.articleService.getEngagementMetrics(id);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Engagement metrics fetched successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to fetch engagement metrics',
+        [{ message: error.message }],
+      );
+    }
   }
 
   // Bulk Operations
   @Post('bulk-fetch')
-  async bulkFetch(@Body() data: { ids: string[] }) {
-    return this.articleService.bulkFetch(data.ids);
+  async bulkFetch(@Body() ids: number[]) {
+    try {
+      const result = await this.articleService.bulkFetch(ids);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Bulk fetch completed successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to perform bulk fetch',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Put('bulk-update')
-  async bulkUpdate(@Body() updates: { id: string; data: any }[]) {
-    return this.articleService.bulkUpdate(updates);
+  async bulkUpdate(@Body() updates: { id: number; data: any }[]) {
+    try {
+      const result = await this.articleService.bulkUpdate(updates);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Bulk update completed successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to perform bulk update',
+        [{ message: error.message }],
+      );
+    }
   }
 
   @Delete('bulk-delete')
-  async bulkDelete(@Body() data: { ids: string[] }) {
-    return this.articleService.bulkDelete(data.ids);
+  async bulkDelete(@Body() ids: number[]) {
+    try {
+      const result = await this.articleService.bulkDelete(ids);
+      return new ResponseSuccess(
+        HttpStatus.OK,
+        'Bulk update completed successfully',
+        result,
+      );
+    } catch (error) {
+      return new ResponseError(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to perform bulk update',
+        [{ message: error.message }],
+      );
+    }
   }
 }

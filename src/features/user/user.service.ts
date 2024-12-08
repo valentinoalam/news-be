@@ -55,7 +55,7 @@ export class UserService implements IUserService {
 
   async findAll(params: PaginationParams) {
     console.log(params);
-    return this.db.user.findMany({
+    return await this.db.user.findMany({
       include: {
         profile: true,
       },

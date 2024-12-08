@@ -21,7 +21,7 @@ export class Comment {
   @ApiProperty({
     type: 'string',
   })
-  articleId: string;
+  articleId: number;
   @ApiProperty({
     type: () => Object,
     required: false,

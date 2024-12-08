@@ -65,7 +65,7 @@ export class CategoryController implements ICategoryController {
     type: Category,
   })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: number) {
     try {
       const category = await this.categoryService.findCategoryById(id);
 
@@ -132,7 +132,7 @@ export class CategoryController implements ICategoryController {
     description: 'The category has been successfully updated.',
   })
   @ApiResponse({ status: 404, description: 'Categorynot found' })
-  async update(@Param('id') id: string, @Body() data: UpdateCategoryDto) {
+  async update(@Param('id') id: number, @Body() data: UpdateCategoryDto) {
     try {
       const category = await this.categoryService.updateCategory(id, data);
 
@@ -160,7 +160,7 @@ export class CategoryController implements ICategoryController {
     description: 'The category has been successfully deleted.',
   })
   @ApiResponse({ status: 404, description: 'Category not found' })
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: number) {
     try {
       const deletedCategory = await this.categoryService.deleteCategory(id);
 

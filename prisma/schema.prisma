@@ -13,7 +13,7 @@ datasource db {
   // shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
-model PageView {
+model BackLink {
   id        String   @id @default(uuid())
   userId    String
   url       String
@@ -52,24 +52,26 @@ model User {
   comments        Comment[]
   subscriptions   NewsletterSubscription[]
   analyticsEvents AnalyticsEvent[]
-
-  @@map("users")
   sessions Session[]
   likes Like[]
   articleViews View[]
+
+  @@map("users")
+  @@index([createdAt])
+
 }
 
 model Profile {
-  id          String   @id @default(uuid())
   bio         String?  @db.Text
   avatar      String?
   socialMedia Json?
-  userId      String   @unique
+  userId      String   @id @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   @@map("profiles")
+  @@index([createdAt])
 }
 model AnalyticsEvent {
   id          String   @id @default(uuid())
@@ -77,7 +79,7 @@ model AnalyticsEvent {
   payload     Json
   userId      String?
   user        User?    @relation(fields: [userId], references: [id])
-  articleId   String?
+  articleId   Int?
   article     Article? @relation(fields: [articleId], references: [id])
   ipAddress   String?
   userAgent   String?
@@ -92,8 +94,8 @@ enum ArticleStatus {
   Archived
 }
 model Article {
-  id            String           @id @default(uuid())
-  categoryId    String
+  id            Int    @id @default(autoincrement())
+  categoryId    Int
   title         String
   slug          String           @unique
   coverImageId  String?          @unique
@@ -105,7 +107,7 @@ model Article {
   category      Category         @relation(fields: [categoryId], references: [id])
   status        ArticleStatus    @default(Draft) 
   clickTimes    Int              @default(0)
-  views          View[]
+  views         View[]
   shares        Share[]   
   likes         Like[]
   comments      Comment[]
@@ -119,26 +121,31 @@ model Article {
   analytics     AnalyticsEvent[]
 
   @@map("articles")
-
-
+  @@index([authorId])
+  @@index([categoryId])
 }
 model View {
-  id        String   @id @default(uuid())
-  articleId    String   
-  article   Article     @relation(fields: [articleId], references: [id])
+  articleId Int   
+  article   Article  @relation(fields: [articleId], references: [id])
   userId    String   
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+  @@id([articleId, userId]) // Composite primary key
+  @@index([articleId]) // Index for faster queries by articleId
+  @@index([userId])    // Index for faster queries by userId
+  @@index([createdAt])
 }
+
 model Like {
-  id           String      @id @default(uuid())
   userId       String       
-  articleId    String
+  articleId    Int
   user         User        @relation(fields: [userId], references: [id])
   article      Article     @relation(fields: [articleId], references: [id])
   createdAt    DateTime @default(now())
 
-  @@unique([articleId, userId])
+  @@id([articleId, userId]) // Composite primary key
+  @@index([articleId]) // Index for faster queries by articleId
+  @@index([userId])    // Index for faster queries by userId
 }
 
 enum SocialShare {
@@ -149,49 +156,61 @@ enum SocialShare {
 
 model Share {
   id            String   @id @default(uuid())
-  articleId     String   
+  articleId     Int   
   article       Article     @relation(fields: [articleId], references: [id])
 
   createdAt     DateTime @default(now())
+  @@index([createdAt])
+  @@index([articleId])
+
 }
 
 model ArticleRevision {
-  id          String   @id @default(uuid())
-  articleId   String   
+  articleId   Int   
   article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
   title       String
-  content     Json
+  content     String
   excerpt     String?  @db.Text
   version     Int
   createdAt   DateTime @default(now())
   createdBy   String?
   changeLog   String?  @db.Text
 
-  @@unique([articleId, version])
+  @@id([articleId, version])
+  @@index([articleId])
   @@map("article_revisions")
 }
 model ArticleMetadata {
-  id          String   @id @default(uuid())
-  articleId   String   @unique 
+  articleId   Int   @id @unique 
   article     Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
   author      String[]
   seoTitle    String?
   abstract    String?  @db.Text
-  keywords    Tag[]
+  keywords    Tag[] @relation("ArticleTags")
   readingTime Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
 
+  @@index([articleId])
   @@map("article_metadata")
 }
 
+model Tag {
+  id          Int    @id @default(autoincrement())
+  name        String    @unique
+  articles    ArticleMetadata[] @relation("ArticleTags")
+  createdAt   DateTime  @default(now())
+  @@index([name])
+  @@map("tags")
+}
+
 model Category {
-  id                      String                   @id @default(uuid())
+  id                      Int    @id @default(autoincrement())
   name                    String                   @unique
   slug                    String                   @unique
   description             String?                  @db.Text
   articles                Article[]
-  parentId                String?                  
+  parentId                Int?                  
   parent                  Category?                @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children                Category[]               @relation("CategoryHierarchy")
   createdAt               DateTime                 @default(now())
@@ -202,19 +221,10 @@ model Category {
   @@index([parentId])
 }
 
-
-model Tag {
-  id          String    @id @default(uuid())
-  name        String    @unique
-  articles    ArticleMetadata[]
-  createdAt   DateTime  @default(now())
-  @@map("tags")
-}
-
 model Comment {
   id        String    @id @default(uuid())
   content   String    @db.Text
-  articleId String    
+  articleId Int    
   article   Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
   authorId  String    
   author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
@@ -225,12 +235,14 @@ model Comment {
   updatedAt DateTime  @updatedAt
 
   @@map("comments")
+  @@index([articleId, parentId, createdAt])
+  @@index([authorId])
 }
 
 model MediaItem {
   id          String    @id @default(uuid())
   sessionId   String?    
-  articleId   String?    
+  articleId   Int?    
   index       Int?
   fileName    String
   fileSize    Int

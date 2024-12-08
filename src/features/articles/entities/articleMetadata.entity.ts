@@ -1,15 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Article } from './article.entity';
+import { Tag } from '@/features/tags/entities/tag.entity';
 
 export class ArticleMetadata {
   @ApiProperty({
-    type: 'string',
+    type: 'number',
   })
-  id: string;
-  @ApiProperty({
-    type: 'string',
-  })
-  articleId: string;
+  articleId: number;
   @ApiProperty({
     type: () => Article,
     required: false,
@@ -24,12 +21,12 @@ export class ArticleMetadata {
     type: 'string',
     nullable: true,
   })
-  abstract: string | null;
+  abstract?: string;
   @ApiProperty({
     type: 'string',
     isArray: true,
   })
-  keywords: string[];
+  keywords?: Tag[];
   @ApiProperty({
     type: 'integer',
     format: 'int32',

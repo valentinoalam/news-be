@@ -5,10 +5,6 @@ import { User } from './user.entity';
 export class Profile {
   @ApiProperty({
     type: 'string',
-  })
-  id: string;
-  @ApiProperty({
-    type: 'string',
     nullable: true,
   })
   bio: string | null;

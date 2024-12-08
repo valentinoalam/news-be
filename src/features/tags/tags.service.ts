@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTagDto } from './dto/create-tag.dto';
 import { UpdateTagDto } from './dto/update-tag.dto';
-import { Tag } from './entities/tag.entity';
 import { DatabaseService } from '@/core/database/database.service';
 import { ITagService } from '@/shared/interfaces/tag.interface';
 
@@ -17,7 +16,7 @@ export class TagService implements ITagService {
   }
 
   // Find a tag by its ID
-  async findTagById(id: string) {
+  async findTagById(id: number) {
     return await this.prisma.tag.findUnique({
       where: { id },
     });
@@ -29,7 +28,7 @@ export class TagService implements ITagService {
   }
 
   // Update a tag by ID
-  async updateTag(id: string, data: UpdateTagDto): Promise<Tag> {
+  async updateTag(id: number, data: UpdateTagDto) {
     const tag = await this.prisma.tag.update({
       where: { id },
       data,
@@ -39,7 +38,7 @@ export class TagService implements ITagService {
   }
 
   // Delete a tag by ID
-  async deleteTag(id: string): Promise<Tag> {
+  async deleteTag(id: number) {
     const tag = await this.prisma.tag.delete({
       where: { id },
     });

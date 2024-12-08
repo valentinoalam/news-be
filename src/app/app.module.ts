@@ -14,7 +14,6 @@ import {
 } from 'nest-winston';
 import * as winston from 'winston';
 import { DatabaseModule } from '../core/database/database.module';
-import { AppService } from './app.service';
 import { HealthModule } from './health/health.module';
 import { ConfigValidator } from '@/core/config/validator/config.validator';
 import { FeaturesModule } from '@/features/features.module';
@@ -31,33 +30,42 @@ import { CacheModule } from '@nestjs/cache-manager';
     DatabaseModule,
     WinstonModule.forRoot({
       transports: [
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            // winston.format.colorize(),
-            // winston.format.ms(),
-            // winston.format.printf(({ timestamp, level, message }) => {
-            //   return `${timestamp} [${level}]: ${message}`;
-            // }),
-            nestWinstonModuleUtilities.format.nestLike('MyApp', {
-              colors: true,
-              prettyPrint: true,
-              processId: true,
-              appName: true,
-            }),
-          ),
-        }),
-        // You can add additional transports, such as file or HTTP transports
-        new winston.transports.File({
-          filename: 'logs/error.log',
-          level: 'error',
-          format: winston.format.combine(
-            winston.format.timestamp(),
-            winston.format.json(),
-          ),
-        }),
+        ...(process.env.ENABLE_LOGGING === 'true'
+          ? [
+              new winston.transports.Console({
+                format: winston.format.combine(
+                  winston.format.timestamp(),
+                  nestWinstonModuleUtilities.format.nestLike('MyApp', {
+                    colors: true,
+                    prettyPrint: true,
+                    processId: true,
+                    appName: true,
+                  }),
+                ),
+              }),
+              new winston.transports.File({
+                filename: 'logs/error.log',
+                level: 'error',
+                format: winston.format.combine(
+                  winston.format.timestamp(),
+                  winston.format.json(),
+                ),
+              }),
+            ]
+          : [
+              new winston.transports.Console({
+                format: winston.format.simple(),
+              }), // Fallback transport
+            ]),
       ],
-      level: process.env.NODE_ENV === 'production' ? 'warn' : 'debug',
+      level:
+        process.env.NODE_ENV === 'production'
+          ? process.env.ENABLE_LOGGING === 'true'
+            ? 'warn'
+            : 'silent'
+          : process.env.ENABLE_LOGGING === 'true'
+            ? 'debug'
+            : 'silent',
     }),
     ServeStaticModule.forRootAsync({
       imports: [ConfigModule],
@@ -83,7 +91,6 @@ import { CacheModule } from '@nestjs/cache-manager';
 
   controllers: [],
   providers: [
-    AppService,
     /*ConfigValidator*/
   ],
 })

@@ -5,21 +5,21 @@ import { Tag } from '@prisma/client';
 
 export interface ITagService {
   createTag(data: CreateTagDto): Promise<Tag>;
-  findTagById(id: string): Promise<Tag | null>;
+  findTagById(id: number): Promise<Tag | null>;
   findAllTags(): Promise<Tag[]>;
-  updateTag(id: string, data: UpdateTagDto): Promise<Tag>;
-  deleteTag(id: string): Promise<Tag>;
+  updateTag(id: number, data: UpdateTagDto): Promise<Tag>;
+  deleteTag(id: number): Promise<Tag>;
 }
 
 export interface ITagController {
   create(
     data: CreateTagDto,
   ): Promise<ResponseSuccess<Tag> | ResponseError<any>>;
-  findOne(id: string): Promise<ResponseSuccess<Tag> | ResponseError<any>>;
+  findOne(id: number): Promise<ResponseSuccess<Tag> | ResponseError<any>>;
   findAll(): Promise<ResponseSuccess<Tag[]> | ResponseError<any>>;
   update(
-    id: string,
+    id: number,
     data: UpdateTagDto,
   ): Promise<ResponseSuccess<Tag> | ResponseError<any>>;
-  remove(id: string): Promise<ResponseSuccess<Tag> | ResponseError<any>>;
+  remove(id: number): Promise<ResponseSuccess<Tag> | ResponseError<any>>;
 }

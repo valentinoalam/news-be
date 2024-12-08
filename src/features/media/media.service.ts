@@ -37,7 +37,7 @@ export class MediaService implements IMediaService {
     });
   }
 
-  async attachToArticle(mediaId: string, articleId: string) {
+  async attachToArticle(mediaId: string, articleId: number) {
     return this.prisma.article.update({
       where: { id: articleId },
       data: {
@@ -67,7 +67,7 @@ export class MediaService implements IMediaService {
     });
   }
 
-  async makePermanent(sessionId: string, articleId: string) {
+  async makePermanent(sessionId: string, articleId: number) {
     // Find all temp images for this session
     const tempImages = await this.prisma.image.findMany({
       where: {

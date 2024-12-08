@@ -30,7 +30,7 @@ export class AnalyticsEvent {
     type: 'string',
     nullable: true,
   })
-  articleId: string | null;
+  articleId: number | null;
   @ApiProperty({
     type: () => Article,
     required: false,

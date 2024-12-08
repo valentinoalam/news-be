@@ -66,7 +66,7 @@ export class NewsletterService implements INewsletterService {
     });
   }
 
-  async updateCategories(email: string, categoryIds: string[]) {
+  async updateCategories(email: string, categoryIds: number[]) {
     return this.prisma.newsletterSubscription.update({
       where: { email },
       data: {
@@ -80,7 +80,7 @@ export class NewsletterService implements INewsletterService {
     });
   }
 
-  async getSubscribersByCategory(categoryId: string) {
+  async getSubscribersByCategory(categoryId: number) {
     return this.prisma.newsletterSubscription.findMany({
       where: {
         status: 'ACTIVE',

@@ -9,8 +9,8 @@ export interface IMediaService {
     data: CreateMediaItemDto[],
   ): Promise<Prisma.BatchPayload>;
   findAll(): Promise<MediaItem[]>;
-  attachToArticle(mediaId: string, articleId: string): Promise<Article>;
+  attachToArticle(mediaId: string, articleId: number): Promise<Article>;
   uploadTemp(file: Express.Multer.File, sessionId: string): Promise<MediaItem>;
-  makePermanent(sessionId: string, articleId: string): void;
+  makePermanent(sessionId: string, articleId: number): void;
   cleanupTempFiles(sessionId: string): void;
 }

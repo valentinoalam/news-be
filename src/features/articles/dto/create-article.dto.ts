@@ -66,7 +66,7 @@ export class CreateArticleDto {
   @IsString()
   @IsOptional()
   @IsUUID('4')
-  categoryId: string;
+  categoryId: number;
   @ApiProperty({
     type: [String],
     isArray: true,

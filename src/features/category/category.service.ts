@@ -17,7 +17,7 @@ export class CategoryService implements ICategoryService {
   }
 
   // Find a category by its ID
-  async findCategoryById(id: string) {
+  async findCategoryById(id: number) {
     return await this.prisma.category.findUnique({
       where: { id },
       include: { children: true },
@@ -44,10 +44,10 @@ export class CategoryService implements ICategoryService {
   }
 
   // Update a category
-  async updateCategory(id: string, dto: UpdateCategoryDto): Promise<Category> {
+  async updateCategory(id: number, dto: UpdateCategoryDto): Promise<Category> {
     const { parentId, ...rest } = dto;
     const parent = parentId
-      ? parentId === ' '
+      ? !parentId
         ? { disconnect: true }
         : { connect: { id: parentId } }
       : undefined;
@@ -66,7 +66,7 @@ export class CategoryService implements ICategoryService {
   }
 
   // Delete a category and optionally its children
-  async deleteCategory(id: string): Promise<Category> {
+  async deleteCategory(id: number): Promise<Category> {
     const category = await this.prisma.category.findUnique({
       where: { id },
     });

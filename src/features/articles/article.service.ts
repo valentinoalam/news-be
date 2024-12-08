@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
-import { slugify } from '@/shared/utils/slugify.util';
 import { DatabaseService } from 'src/core/database/database.service';
 import {
   getPaginatedData,
@@ -48,7 +47,6 @@ export class ArticleService implements IArticleService {
       const article = await this.db.article.create({
         data: {
           ...rest,
-          slug: slugify(rest.title),
           author: { connect: { id: authorId } },
           category: { connect: { id: categoryId } },
           metadata: {
@@ -91,7 +89,7 @@ export class ArticleService implements IArticleService {
   }
 
   // Add method to update content with new image URLs
-  async updateContent(id: string, content: any) {
+  async updateContent(id: number, content: any) {
     return this.db.article.update({
       where: { id },
       data: { content },
@@ -100,7 +98,7 @@ export class ArticleService implements IArticleService {
   }
 
   // Update article details
-  async update(id: string, data: UpdateArticleDto, userId: string) {
+  async update(id: number, data: UpdateArticleDto, userId: string) {
     const { mediaFiles, ...updateFields } = data;
     const dataOut = {
       status: false,
@@ -114,7 +112,6 @@ export class ArticleService implements IArticleService {
         data: {
           ...updateFields,
           updatedById: userId,
-          slug: data.title ? slugify(data.title) : undefined,
         },
       });
 
@@ -144,7 +141,7 @@ export class ArticleService implements IArticleService {
   }
   // Update article and create a revision before updating
   async updateArticle(
-    articleId: string,
+    articleId: number,
     updateData: UpdateArticleDto,
     userId: string,
   ) {
@@ -159,9 +156,9 @@ export class ArticleService implements IArticleService {
     return await this.update(articleId, updateData, userId);
   }
 
-  async createRevision(articleId: string, originalArticle: any) {
+  async createRevision(id: number, originalArticle: any) {
     const article = await this.db.article.findUnique({
-      where: { id: articleId },
+      where: { id },
       include: { revisions: true },
     });
 
@@ -169,7 +166,7 @@ export class ArticleService implements IArticleService {
 
     return this.db.articleRevision.create({
       data: {
-        articleId,
+        articleId: id,
         version: newVersion,
         title: originalArticle.title,
         content: originalArticle.content,
@@ -182,58 +179,30 @@ export class ArticleService implements IArticleService {
     });
   }
 
-  // Fetch articles by category
-  async fetchArticlesByCategory(categoryId: string) {
-    return this.db.article.findMany({
-      where: { categoryId },
-      include: {
-        author: true,
-        category: true,
-        mediaItems: true,
+  async getPopularArticles() {
+    return await this.db.article.findMany({
+      select: {
+        id: true,
+        title: true,
+        clickTimes: true,
+        _count: {
+          select: {
+            views: true,
+            likes: true,
+            comments: true,
+          },
+        },
       },
+      orderBy: {
+        views: {
+          _count: 'desc',
+        },
+        likes: {
+          _count: 'desc',
+        },
+      },
+      take: 10,
     });
-  }
-
-  async findAll(params: ArticleQueryParams) {
-    const { skip, limit, orderBy } = getPaginationParams(params);
-    const query = {
-      include: {
-        author: true,
-        category: true,
-        tags: true,
-        metadata: true,
-      },
-      orderBy,
-    };
-    const paginatedArticles: PaginatedResponse<Article> =
-      await getPaginatedData(
-        this.db,
-        'article',
-        query,
-        params.page,
-        limit,
-        skip,
-      );
-    return paginatedArticles;
-  }
-
-  async findOne(id: string) {
-    const article = await this.db.article.findUnique({
-      where: { id },
-      include: {
-        author: true,
-        category: true,
-        mediaItems: true,
-        metadata: true,
-        revisions: true,
-      },
-    });
-
-    if (!article) {
-      throw new NotFoundException(`Article with ID ${id} not found`);
-    }
-
-    return article;
   }
 
   async getTopArticles() {
@@ -282,14 +251,68 @@ export class ArticleService implements IArticleService {
     };
   }
 
-  async remove(id: string) {
+  // Fetch articles by category
+  async fetchArticlesByCategory(categoryId: number) {
+    return await this.db.article.findMany({
+      where: { categoryId },
+      include: {
+        author: true,
+        category: true,
+        mediaItems: true,
+      },
+    });
+  }
+
+  async findAll(params: ArticleQueryParams) {
+    const { skip, limit, orderBy } = getPaginationParams(params);
+    const query = {
+      include: {
+        author: true,
+        category: true,
+        tags: true,
+        metadata: true,
+      },
+      orderBy,
+    };
+    const paginatedArticles: PaginatedResponse<Article> =
+      await getPaginatedData(
+        this.db,
+        'article',
+        query,
+        params.page,
+        limit,
+        skip,
+      );
+    return paginatedArticles;
+  }
+
+  async findOne(id: number) {
+    const article = await this.db.article.findUnique({
+      where: { id },
+      include: {
+        author: true,
+        category: true,
+        mediaItems: true,
+        metadata: true,
+        revisions: true,
+      },
+    });
+
+    if (!article) {
+      throw new NotFoundException(`Article with ID ${id} not found`);
+    }
+
+    return article;
+  }
+
+  async remove(id: number) {
     return this.db.article.delete({
       where: { id },
     });
   }
 
   // Content Management
-  async publish(id: string) {
+  async publish(id: number) {
     return this.db.article.update({
       where: { id },
       data: {
@@ -299,7 +322,7 @@ export class ArticleService implements IArticleService {
     });
   }
 
-  async saveDraft(id: string, data: Prisma.ArticleUpdateInput) {
+  async saveDraft(id: number, data: Prisma.ArticleUpdateInput) {
     return this.db.article.update({
       where: { id },
       data: {
@@ -309,9 +332,9 @@ export class ArticleService implements IArticleService {
     });
   }
 
-  async updateTags(id: string, tags: string[]) {
+  async updateTags(articleId: number, tags: string[]) {
     return this.db.articleMetadata.update({
-      where: { id },
+      where: { articleId },
       data: {
         keywords: {
           deleteMany: {}, // Remove all existing keyword relations for the article
@@ -328,7 +351,7 @@ export class ArticleService implements IArticleService {
   }
 
   // Media and Attachments
-  async addMedia(id: string, fileData: any) {
+  async addMedia(id: number, fileData: any) {
     return this.db.mediaItem.create({
       data: {
         ...fileData,
@@ -339,19 +362,19 @@ export class ArticleService implements IArticleService {
     });
   }
 
-  async getMedia(id: string) {
+  async getMedia(articleId: number) {
     return this.db.mediaItem.findMany({
       where: {
-        articleId: id,
+        articleId,
       },
     });
   }
 
   // Comments and Interactions
-  async getComments(id: string) {
+  async getComments(articleId: number) {
     return this.db.comment.findMany({
       where: {
-        articleId: id,
+        articleId,
       },
       include: {
         author: true,
@@ -362,7 +385,7 @@ export class ArticleService implements IArticleService {
     });
   }
 
-  async addComment(id: string, data: Prisma.CommentCreateInput) {
+  async addComment(id: number, data: Prisma.CommentCreateInput) {
     return this.db.comment.create({
       data: {
         ...data,
@@ -376,7 +399,7 @@ export class ArticleService implements IArticleService {
     });
   }
 
-  async addLike(id: string, userId: string) {
+  async addLike(id: number, userId: string) {
     return this.db.like.create({
       data: {
         article: {
@@ -389,42 +412,45 @@ export class ArticleService implements IArticleService {
     });
   }
 
-  async getLikesCount(id: string) {
+  async getLikesCount(articleId: number) {
     return this.db.like.count({
       where: {
-        articleId: id,
+        articleId,
       },
     });
   }
 
   // SEO and Metadata
-  async getMetadata(id: string) {
+  async getMetadata(articleId: number) {
     return this.db.articleMetadata.findUnique({
       where: {
-        articleId: id,
+        articleId,
       },
     });
   }
 
-  async updateMetadata(id: string, data: Prisma.ArticleMetadataUpdateInput) {
+  async updateMetadata(
+    articleId: number,
+    data: Prisma.ArticleMetadataUpdateInput,
+  ) {
     return this.db.articleMetadata.update({
       where: {
-        articleId: id,
+        articleId,
       },
       data,
     });
   }
 
   // Analytics
-  async getViews(id: string) {
+  async getViews(articleId: number) {
     return this.db.view.count({
       where: {
-        articleId: id,
+        articleId,
       },
     });
   }
 
-  async trackView(id: string, userId?: string) {
+  async trackView(id: number, userId?: string) {
     return this.db.view.create({
       data: {
         article: {
@@ -439,13 +465,13 @@ export class ArticleService implements IArticleService {
     });
   }
 
-  async getEngagementMetrics(id: string) {
+  async getEngagementMetrics(articleId: number) {
     const [likes, comments, views, articleData] = await Promise.all([
-      this.db.like.count({ where: { articleId: id } }),
-      this.db.comment.count({ where: { articleId: id } }),
-      this.db.view.count({ where: { articleId: id } }),
+      this.db.like.count({ where: { articleId } }),
+      this.db.comment.count({ where: { articleId } }),
+      this.db.view.count({ where: { articleId } }),
       this.db.article.findUnique({
-        where: { id },
+        where: { id: articleId },
         select: { clickTimes: true },
       }),
     ]);
@@ -454,7 +480,7 @@ export class ArticleService implements IArticleService {
   }
 
   // Bulk Operations
-  async bulkFetch(ids: string[]) {
+  async bulkFetch(ids: number[]) {
     return this.db.article.findMany({
       where: {
         id: {
@@ -467,7 +493,7 @@ export class ArticleService implements IArticleService {
     });
   }
 
-  async bulkUpdate(updates: { id: string; data: Prisma.ArticleUpdateInput }[]) {
+  async bulkUpdate(updates: { id: number; data: Prisma.ArticleUpdateInput }[]) {
     const transactions = updates.map(({ id, data }) =>
       this.db.article.update({
         where: { id },
@@ -478,7 +504,7 @@ export class ArticleService implements IArticleService {
     return this.db.$transaction(transactions);
   }
 
-  async bulkDelete(ids: string[]) {
+  async bulkDelete(ids: number[]) {
     return this.db.article.deleteMany({
       where: {
         id: {

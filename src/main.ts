@@ -10,8 +10,10 @@ import { DatabaseService } from './core/database/database.service';
 
 declare const module: any;
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const logger = new Logger('HTTP');
+  const app = await NestFactory.create(AppModule, {
+    logger: false, // Disable default logger
+  });
+  const logger = new Logger('Bootstrap');
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   const { httpAdapter } = app.get(HttpAdapterHost);
   const config = app.get(ConfigService);

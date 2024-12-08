@@ -5,10 +5,10 @@ import { Category } from '@/features/category/entities/category.entity';
 
 export interface ICategoryService {
   createCategory(data: CreateCategoryDto): Promise<Category>;
-  findCategoryById(id: string): Promise<Category>;
+  findCategoryById(id: number): Promise<Category>;
   findAllCategories(): Promise<Category[]>;
-  updateCategory(id: string, data: UpdateCategoryDto): Promise<Category>;
-  deleteCategory(id: string): Promise<Category>;
+  updateCategory(id: number, data: UpdateCategoryDto): Promise<Category>;
+  deleteCategory(id: number): Promise<Category>;
 }
 
 export interface ICategoryController {
@@ -16,12 +16,12 @@ export interface ICategoryController {
     data: CreateCategoryDto,
   ): Promise<ResponseSuccess<Category> | ResponseError<any>>;
   findOne(
-    id: string,
+    id: number,
   ): Promise<ResponseSuccess<Category[]> | ResponseError<any>>;
   findAll(): Promise<ResponseSuccess<Category[]> | ResponseError<any>>;
   update(
-    id: string,
+    id: number,
     data: UpdateCategoryDto,
   ): Promise<ResponseSuccess<Category> | ResponseError<any>>;
-  remove(id: string): Promise<ResponseSuccess<Category> | ResponseError<any>>;
+  remove(id: number): Promise<ResponseSuccess<Category> | ResponseError<any>>;
 }

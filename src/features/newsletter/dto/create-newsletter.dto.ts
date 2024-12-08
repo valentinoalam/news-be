@@ -16,7 +16,7 @@ export class CreateNewsletterSubscriptionDto {
   })
   @IsOptional()
   @IsArray()
-  categoryIds?: string[];
+  categoryIds?: number[];
   @ApiProperty({
     type: 'string',
   })

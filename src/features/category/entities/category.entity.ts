@@ -4,9 +4,9 @@ import { NewsletterSubscription } from '@/features/newsletter/entities/newslette
 
 export class Category {
   @ApiProperty({
-    type: 'string',
+    type: 'number',
   })
-  id: string;
+  id: number;
   @ApiProperty({
     type: 'string',
   })
@@ -27,10 +27,10 @@ export class Category {
   })
   articles?: Article[];
   @ApiProperty({
-    type: 'string',
+    type: 'number',
     nullable: true,
   })
-  parentId: string | null;
+  parentId: number | null;
   @ApiProperty({
     type: () => Category,
     required: false,

@@ -2,13 +2,9 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Article } from './article.entity';
 export class ArticleRevision {
   @ApiProperty({
-    type: 'string',
+    type: 'number',
   })
-  id: string;
-  @ApiProperty({
-    type: 'string',
-  })
-  articleId: string;
+  articleId: number;
   @ApiProperty({
     type: () => Article,
     required: false,

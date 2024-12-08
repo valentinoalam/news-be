@@ -62,7 +62,7 @@ export class TagController implements ITagController {
     type: Tag,
   })
   @ApiResponse({ status: 404, description: 'Tag not found' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: number) {
     try {
       const tag = await this.tagService.findTagById(id);
       if (!tag) {
@@ -119,7 +119,7 @@ export class TagController implements ITagController {
     description: 'The tag has been successfully updated.',
   })
   @ApiResponse({ status: 404, description: 'Tag not found' })
-  async update(@Param('id') id: string, @Body() data: UpdateTagDto) {
+  async update(@Param('id') id: number, @Body() data: UpdateTagDto) {
     try {
       const updatedTag = await this.tagService.updateTag(id, data);
       if (!updatedTag) {
@@ -151,7 +151,7 @@ export class TagController implements ITagController {
     description: 'The tag has been successfully deleted.',
   })
   @ApiResponse({ status: 404, description: 'Tag not found' })
-  async remove(@Param('id') id: string) {
+  async remove(@Param('id') id: number) {
     try {
       const result = await this.tagService.deleteTag(id);
       if (!result) {

@@ -27,7 +27,7 @@ import { ResponseError, ResponseSuccess } from '@/common/response/response';
 @Controller('comment')
 export class CommentController implements ICommentController {
   constructor(private readonly commentService: CommentService) {}
-  // Create a new comment or reply
+
   @Post()
   @ApiOperation({ summary: 'Create a new comment or reply' })
   @ApiBody({ description: 'Comment data', type: CreateCommentDto })
@@ -53,7 +53,6 @@ export class CommentController implements ICommentController {
     }
   }
 
-  // Get a specific comment by ID, with nested replies
   @Get(':id')
   @ApiOperation({ summary: 'Get a comment by ID with nested replies' })
   @ApiParam({ name: 'id', description: 'ID of the comment to retrieve' })
@@ -87,7 +86,6 @@ export class CommentController implements ICommentController {
     }
   }
 
-  // Get all top-level comments for a specific article, including nested replies
   @Get('/article/:articleId')
   @ApiOperation({
     summary: 'Get all top-level comments for a specific article',
@@ -98,7 +96,7 @@ export class CommentController implements ICommentController {
     description: 'Comments retrieved successfully',
     type: [Comment],
   })
-  async findByArticle(@Param('articleId') articleId: string) {
+  async findByArticle(@Param('articleId') articleId: number) {
     try {
       const comments =
         await this.commentService.findCommentsByArticle(articleId);
