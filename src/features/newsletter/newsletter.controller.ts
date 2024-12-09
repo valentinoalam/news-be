@@ -19,6 +19,7 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { SendNewsletterDto } from './dto/send-newsletter.dto';
 import { UpdateEmailDto, DeleteSubscriberDto } from './dto/subscriber.dto';
+import { PaginationParams } from '@/shared/utils/pagination.util';
 @ApiTags('newsletter')
 @Controller('newsletter')
 export class NewsletterController {
@@ -45,8 +46,8 @@ export class NewsletterController {
   @Roles(Role.ADMIN)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all subscribers' })
-  getSubscribers() {
-    return this.newsletterService.getSubscribers();
+  getSubscribers(@Query() params: PaginationParams) {
+    return this.newsletterService.getSubscribers(params);
   }
 
   @Get('status')

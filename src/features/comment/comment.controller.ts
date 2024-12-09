@@ -8,6 +8,8 @@ import {
   Delete,
   HttpCode,
   HttpStatus,
+  Req,
+  Query,
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -22,6 +24,10 @@ import {
 import { Comment } from './entities/comment.entity';
 import { ICommentController } from '@/shared/interfaces/comment.interface';
 import { ResponseError, ResponseSuccess } from '@/common/response/response';
+import {
+  PaginatedResponse,
+  PaginationParams,
+} from '@/shared/utils/pagination.util';
 
 @ApiTags('Comments')
 @Controller('comment')
@@ -36,9 +42,12 @@ export class CommentController implements ICommentController {
     description: 'Comment has been successfully created.',
   })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async create(@Body() data: CreateCommentDto) {
+  async create(@Req() req, @Body() data: CreateCommentDto) {
     try {
-      const comment = await this.commentService.createComment(data);
+      const comment = await this.commentService.createComment(
+        req.user.id,
+        data,
+      );
       return new ResponseSuccess<Comment>(
         HttpStatus.CREATED, // HTTP 201
         'Comment created successfully',
@@ -96,18 +105,30 @@ export class CommentController implements ICommentController {
     description: 'Comments retrieved successfully',
     type: [Comment],
   })
-  async findByArticle(@Param('articleId') articleId: number) {
+  async getCommentsByArticle(
+    @Param('articleId') articleId: number,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    const params: PaginationParams = {
+      page,
+      limit,
+      orderBy: 'createdAt',
+      order: 'desc',
+    };
     try {
-      const comments =
-        await this.commentService.findCommentsByArticle(articleId);
-      if (comments.length === 0) {
-        return new ResponseError<Comment[]>(
+      const comments = await this.commentService.getCommentsByArticle(
+        articleId,
+        params,
+      );
+      if (comments.data.length === 0) {
+        return new ResponseError<any>(
           HttpStatus.NOT_FOUND, // HTTP 404
           'Comments not found',
           [{ message: `Theres no comments in this article` }],
         );
       }
-      return new ResponseSuccess<Comment[]>(
+      return new ResponseSuccess<PaginatedResponse<Comment>>(
         HttpStatus.OK, // HTTP 200
         'Comments retrieved successfully',
         comments,
@@ -131,14 +152,22 @@ export class CommentController implements ICommentController {
     description: 'Comment has been successfully updated.',
   })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  async update(@Param('id') id: string, @Body() data: UpdateCommentDto) {
+  async updateComment(
+    @Req() req,
+    @Param('commentId') commentId: string,
+    @Body() data: UpdateCommentDto,
+  ) {
     try {
-      const comment = await this.commentService.updateComment(id, data);
+      const comment = await this.commentService.updateComment(
+        req.user.id,
+        commentId,
+        data,
+      );
       if (!comment) {
         return new ResponseError<Comment>(
           HttpStatus.NOT_FOUND, // HTTP 404
           'Comment not found',
-          [{ message: `Comment with id ${id} does not exist` }],
+          [{ message: `Comment with id ${commentId} does not exist` }],
         );
       }
       return new ResponseSuccess<Comment>(
@@ -165,14 +194,17 @@ export class CommentController implements ICommentController {
     description: 'Comment has been successfully deleted.',
   })
   @ApiResponse({ status: 404, description: 'Comment not found' })
-  async remove(@Param('id') id: string) {
+  async deleteComment(@Req() req, @Param('commentId') commentId: string) {
     try {
-      const deletedComment = await this.commentService.deleteComment(id);
+      const deletedComment = await this.commentService.deleteComment(
+        req.user.id,
+        commentId,
+      );
       if (!deletedComment) {
         return new ResponseError<Comment>(
           HttpStatus.NOT_FOUND, // HTTP 404
           'Comment not found',
-          [{ message: `Comment with id ${id} does not exist` }],
+          [{ message: `Comment with id ${commentId} does not exist` }],
         );
       }
       return new ResponseSuccess<Comment>(
@@ -187,5 +219,30 @@ export class CommentController implements ICommentController {
         [{ message: error.message }],
       );
     }
+  }
+
+  @Post('reply')
+  async createReply(@Req() req, @Body() dto: CreateCommentDto) {
+    return this.commentService.createReply(req.user.id, dto);
+  }
+
+  @Get('/nested/:articleId')
+  async getNestedComments(
+    @Param('articleId') articleId: number,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ) {
+    const params: PaginationParams = {
+      page,
+      limit,
+      orderBy: 'createdAt',
+      order: 'desc',
+    };
+    return this.commentService.getNestedComments(articleId, params);
+  }
+
+  @Get('/:commentId/replies')
+  async getReplies(@Param('commentId') commentId: string) {
+    return this.commentService.getRepliesForComment(commentId);
   }
 }

@@ -4,29 +4,7 @@ import { CreateAnalyticsEventDto } from '@/features/analytics/dto/create-analyti
 import { Session } from '@prisma/client';
 import { PaginatedResponse, PaginationParams } from '../utils/pagination.util';
 import { ResponseError, ResponseSuccess } from '@/common/response/response';
-// export interface IAnalyticsService {
-//   getArticleAnalytics(
-//     articleId: number,
-//     params: PaginationParams,
-//   ): Promise<PaginatedResponse<AnalyticsEvent>>;
-//   getUserAnalytics(
-//     userId: string,
-//     params: PaginationParams,
-//   ): Promise<PaginatedResponse<AnalyticsEvent>>;
-//   getUserVisits(startDate: Date, endDate: Date): object;
-//   getUserLocations(): object;
-//   getSessionDuration(): object;
-//   getDeviceInfo(): object;
-//   getArticlesEngagement(articleId: number): object;
-//   getArticlesCTR(articleId: number): object;
-//   getTrafficSources(): object;
-//   getReferrals(): object;
-//   startSession(userId: string, deviceInfo: any): Promise<Session>;
-//   endSession(sessionId: string): Promise<Session>;
-//   getActiveUsers(): Promise<number>;
-//   logEvent(data: CreateAnalyticsEventDto): Promise<AnalyticsEvent>;
-//   clearAnalyticsData(userId: string): object;
-// }
+
 type UserVisitsResponse = {
   totalVisits: number;
   visitsPerDay: Record<string, number>;
@@ -164,31 +142,95 @@ export interface IAnalyticsService {
 }
 
 export interface IAnalyticsController {
+  /**
+   * @endpoint 'top-articles'
+   */
   getTopPerformingArticles(): Promise<
     ResponseSuccess<AnalyticsEvent[]> | ResponseError<any>
   >;
+  /**
+   * @endpoint 'articles/:articleId'
+   */
   getArticleAnalytics(
     articleId: number,
     params: PaginationParams,
   ): Promise<
     ResponseSuccess<PaginatedResponse<AnalyticsEvent>> | ResponseError<any>
   >;
+  /**
+   * @endpoint 'users/:userId'
+   */
   getUserAnalytics(
     userId: string,
     params: PaginationParams,
-  ): Promise<PaginatedResponse<AnalyticsEvent>>;
-  getUserVisits(startDate: Date, endDate: Date): object;
-  getUserLocations(): object;
-  getSessionDuration(): object;
-  getDeviceInfo(): object;
-  getPopularArticles(): object;
-  getArticlesEngagement(articleId: number): object;
-  getArticlesCTR(articleId: number): object;
-  getTrafficSources(): object;
+  ): Promise<
+    ResponseSuccess<PaginatedResponse<AnalyticsEvent>> | ResponseError<any>
+  >;
+  /**
+   * @endpoint 'users/visits'
+   */
+  getUserVisits(
+    startDate: string,
+    endDate: string,
+  ): Promise<ResponseSuccess<any> | ResponseError<any>>;
+  /**
+   * @endpoint 'users/demographics'
+   */
+  getUserDemographics(): Promise<ResponseSuccess<any> | ResponseError<any>>;
+
+  /**
+   * @endpoint 'users/locations'
+   */
+  getUserLocations(): Promise<ResponseSuccess<any> | ResponseError<any>>;
+  /**
+   * @endpoint 'users/session-duration'
+   */
+  getSessionDuration(): Promise<ResponseSuccess<any> | ResponseError<any>>;
+  /**
+   * @endpoint 'users/device-info'
+   */
+  getDeviceInfo(): Promise<ResponseSuccess<any> | ResponseError<any>>;
+  /**
+   * @endpoint 'article-engagement/:articleId'
+   */
+  getArticlesEngagement(
+    articleId: number,
+  ): Promise<ResponseSuccess<any> | ResponseError<any>>;
+  /**
+   * @endpoint 'ctr/:articleId'
+   */
+  getArticlesCTR(
+    articleId: number,
+  ): Promise<ResponseSuccess<any> | ResponseError<any>>;
+  /**
+   * @endpoint 'users/traffic-sources'
+   */
+  getTrafficSources(): Promise<ResponseSuccess<any> | ResponseError<any>>;
+  /**
+   * @endpoint 'users/referrals'
+   */
   getReferrals(): object;
-  startSession(userId: string, deviceInfo: any): Promise<Session>;
+  /**
+   * @endpoint 'session/start'
+   */
+  startSession(data: { userId: string; deviceInfo: any }): Promise<Session>;
+  /**
+   * @endpoint 'session/end'
+   */
   endSession(sessionId: string): Promise<Session>;
+  /**
+   * @endpoint 'real-time/active-users'
+   */
   getActiveUsers(): Promise<number>;
+  /**
+   * @endpoint 'events/log'
+   */
   logEvent(data: CreateAnalyticsEventDto): Promise<AnalyticsEvent>;
-  clearAnalyticsData(userId: string): object;
+  /**
+   * @endpoint 'data'
+   */
+  clearAnalyticsData(userId: string): Promise<{
+    success: boolean;
+    clearedRecords: number;
+  }>;
 }

@@ -22,16 +22,17 @@ import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { PaginationParams } from '@/shared/utils/pagination.util';
 import { ResponseError, ResponseSuccess } from '@/common/response/response';
+import { IAnalyticsController } from '@/shared/interfaces/analytics.interface';
 
 @ApiTags('analytics')
 @Controller('analytics')
 @UseGuards(RoleGuard)
 @ApiBearerAuth()
 @Controller('analytics')
-export class AnalyticsController {
+export class AnalyticsController implements IAnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
-  @Get('top-performing-articles')
+  @Get('top-articles')
   async getTopPerformingArticles(@Query('limit') limit?: number) {
     try {
       // Default limit to 10 if not provided
@@ -170,7 +171,7 @@ export class AnalyticsController {
     }
   }
   // User Engagement endpoints
-  @Get('user-visits')
+  @Get('users/visits')
   async getUserVisits(
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
@@ -195,7 +196,7 @@ export class AnalyticsController {
     }
   }
 
-  @Get('user-demographics')
+  @Get('users/demographics')
   async getUserDemographics() {
     try {
       const demographics = await this.analyticsService.getUserDemographics();
@@ -280,7 +281,7 @@ export class AnalyticsController {
     }
   }
   // Traffic Sources endpoints
-  @Get('traffic-sources')
+  @Get('users/traffic-sources')
   async getTrafficSources() {
     try {
       const trafficSources = await this.analyticsService.getTrafficSources();
@@ -302,7 +303,7 @@ export class AnalyticsController {
     }
   }
 
-  @Get('referrals')
+  @Get('users/referrals')
   async getReferrals() {
     try {
       const referrals = await this.analyticsService.getReferrals();
@@ -380,8 +381,8 @@ export class AnalyticsController {
   }
 
   @Post('session/end')
-  async endSession(@Body() data: { sessionId: string }) {
-    return this.analyticsService.endSession(data.sessionId);
+  async endSession(@Body() sessionId: string) {
+    return this.analyticsService.endSession(sessionId);
   }
 
   // Real-time Analytics endpoints
@@ -397,7 +398,7 @@ export class AnalyticsController {
   }
 
   @Delete('data')
-  async clearAnalyticsData(@Body() data: { userId: string }) {
-    return this.analyticsService.clearAnalyticsData(data.userId);
+  async clearAnalyticsData(@Body() userId: string) {
+    return this.analyticsService.clearAnalyticsData(userId);
   }
 }

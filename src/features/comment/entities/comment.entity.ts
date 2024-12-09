@@ -7,6 +7,7 @@ type Author = {
     avatar: string;
   };
 };
+
 type ArticlePart = Partial<Article>;
 
 export class Comment {

@@ -9,6 +9,12 @@ import { DatabaseService } from 'src/core/database/database.service';
 import { Prisma } from '@prisma/client';
 import { MailerService } from '../../shared/mailer/mailer.service';
 import { INewsletterService } from '../../shared/interfaces/newsletter.interface';
+import {
+  getPaginatedData,
+  getPaginationParams,
+  PaginationParams,
+} from '@/shared/utils/pagination.util';
+import { NewsletterSubscription } from './entities/newsletter.entity';
 
 @Injectable()
 export class NewsletterService implements INewsletterService {
@@ -124,15 +130,27 @@ export class NewsletterService implements INewsletterService {
     };
   }
 
-  async getSubscribers() {
-    return this.prisma.newsletterSubscription.findMany({
+  async getSubscribers(params: PaginationParams) {
+    const { skip, limit, orderBy = 'createdAt' } = getPaginationParams(params);
+    const query = {
       where: {
         status: 'ACTIVE',
       },
+      orderBy,
       include: {
         categories: true,
       },
-    });
+    };
+
+    const paginatedArticles = await getPaginatedData<NewsletterSubscription>(
+      this.prisma,
+      'newsletterSubscription',
+      query,
+      params.page,
+      limit,
+      skip,
+    );
+    return paginatedArticles;
   }
   async checkStatus(email: string): Promise<string> {
     const subscriber = await this.prisma.newsletterSubscription.findUnique({
