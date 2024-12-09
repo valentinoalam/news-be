@@ -17,10 +17,19 @@ export class LoggingInterceptor implements NestInterceptor {
     const { method, url } = request;
     const now = Date.now();
 
+    if (url.startsWith('/health') || url.startsWith('/static')) {
+      return next.handle();
+    }
+
     return next.handle().pipe(
       tap(() => {
         const responseTime = Date.now() - now;
-        this.logger.log(`${method} ${url} ${responseTime}ms`);
+        this.logger.log({
+          level: 'info',
+          message: `${method} ${url}`,
+          responseTime: `${responseTime}ms`,
+          timestamp: new Date().toISOString(),
+        });
       }),
     );
   }

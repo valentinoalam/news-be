@@ -8,16 +8,15 @@ import {
 } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
-import {
-  utilities as nestWinstonModuleUtilities,
-  WinstonModule,
-} from 'nest-winston';
-import * as winston from 'winston';
+import { WinstonModule } from 'nest-winston';
 import { DatabaseModule } from '../core/database/database.module';
 import { HealthModule } from './health/health.module';
 import { ConfigValidator } from '@/core/config/validator/config.validator';
 import { FeaturesModule } from '@/features/features.module';
 import { CacheModule } from '@nestjs/cache-manager';
+import { winstonConfig } from '@/core/config/winston.config';
+import { LoggingInterceptor } from '@/common/interceptors/logging.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 // import { APP_INTERCEPTOR } from '@nestjs/core';
 @Module({
   imports: [
@@ -28,45 +27,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     }),
     HealthModule,
     DatabaseModule,
-    WinstonModule.forRoot({
-      transports: [
-        ...(process.env.ENABLE_LOGGING === 'true'
-          ? [
-              new winston.transports.Console({
-                format: winston.format.combine(
-                  winston.format.timestamp(),
-                  nestWinstonModuleUtilities.format.nestLike('MyApp', {
-                    colors: true,
-                    prettyPrint: true,
-                    processId: true,
-                    appName: true,
-                  }),
-                ),
-              }),
-              new winston.transports.File({
-                filename: 'logs/error.log',
-                level: 'error',
-                format: winston.format.combine(
-                  winston.format.timestamp(),
-                  winston.format.json(),
-                ),
-              }),
-            ]
-          : [
-              new winston.transports.Console({
-                format: winston.format.simple(),
-              }), // Fallback transport
-            ]),
-      ],
-      level:
-        process.env.NODE_ENV === 'production'
-          ? process.env.ENABLE_LOGGING === 'true'
-            ? 'warn'
-            : 'silent'
-          : process.env.ENABLE_LOGGING === 'true'
-            ? 'debug'
-            : 'silent',
-    }),
+    WinstonModule.forRoot(winstonConfig),
     ServeStaticModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService], // Inject ConfigService
@@ -92,6 +53,10 @@ import { CacheModule } from '@nestjs/cache-manager';
   controllers: [],
   providers: [
     /*ConfigValidator*/
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
   ],
 })
 export class AppModule implements NestModule {
