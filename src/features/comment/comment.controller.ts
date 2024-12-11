@@ -42,12 +42,9 @@ export class CommentController implements ICommentController {
     description: 'Comment has been successfully created.',
   })
   @ApiResponse({ status: 400, description: 'Bad Request.' })
-  async create(@Req() req, @Body() data: CreateCommentDto) {
+  async create(@Req() req, @Body() dto: CreateCommentDto) {
     try {
-      const comment = await this.commentService.createComment(
-        req.user.id,
-        data,
-      );
+      const comment = await this.commentService.createComment(req.user.id, dto);
       return new ResponseSuccess<Comment>(
         HttpStatus.CREATED, // HTTP 201
         'Comment created successfully',
