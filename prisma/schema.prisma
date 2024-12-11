@@ -13,7 +13,7 @@ datasource db {
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
-model BackLink {
+model PageView {
   id        String   @id @default(uuid())
   userId    String
   url       String
